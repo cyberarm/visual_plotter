@@ -3,7 +3,7 @@ class Display < Gosu::Window
     super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, false)
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
 
-    @machine = Machine.new
+    @machine = Machine.new(window: self)
     @plot_button  = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.plot}
     @close_button = Button.new(window: self, text: "Close", x: 200, y: @machine.bed.y+@machine.bed.height+50) {close}
   end

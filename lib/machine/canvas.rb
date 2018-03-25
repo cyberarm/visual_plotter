@@ -19,8 +19,6 @@ class Machine
       else
         puts "OutOfBounds> #{x}x#{y} -> #{color}"
       end
-
-      refresh
     end
 
     def draw

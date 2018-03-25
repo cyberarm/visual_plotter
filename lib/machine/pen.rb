@@ -1,7 +1,7 @@
 class Machine
   class Pen
-    attr_accessor :x, :y, :position
-    def initialize(machine:, x: 100, y: 100, size: 4, color: Gosu::Color::GREEN, down_color: Gosu::Color::BLACK)
+    attr_accessor :x, :y, :plot
+    def initialize(machine:, x: 100, y: 100, size: 4, color: Gosu::Color.rgb(100,100,25), down_color: Gosu::Color::BLACK)
       @machine = machine
       @bed = @machine.bed
       @x,@y,@size = x,y,size
@@ -10,12 +10,12 @@ class Machine
 
       puts "PEN> #{@bed.width}x#{@bed.height}"
 
-      @position = :up
+      @plot = false
     end
 
     def draw
-      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @color) if @position == :up
-      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @down_color) if @position == :down
+      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @color) unless @plot
+      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @down_color) if @plot
     end
 
     def update
@@ -24,7 +24,7 @@ class Machine
       @y = @bed.y+@bed.height-1 if @x > @bed.y+(@bed.height-1)
       @y = @bed.y if @x < @bed.y
 
-      if @position == :down
+      if @plot
         paint
       end
     end

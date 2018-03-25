@@ -29,7 +29,7 @@ class Text
   end
 
   def width
-    puts @font.text_width(@text)
+    # puts @font.text_width(@text)
     return @font.text_width(@text)
   end
 

@@ -8,6 +8,8 @@ class Machine
       @color = color
       @down_color = down_color
 
+      puts "PEN> #{@bed.width}x#{@bed.height}"
+
       @position = :up
     end
 
@@ -17,10 +19,18 @@ class Machine
     end
 
     def update
-      @x = @bed.x+@bed.width if @x > @bed.x+@bed.width
-      @y = @bed.y+@bed.height if @x > @bed.y+@bed.height
+      @x = @bed.x+@bed.width if @x > @bed.x+@bed.width-1
+      @x = @bed.x if @x < @bed.x
+      @y = @bed.y+@bed.height if @x > @bed.y+@bed.height-1
+      @y = @bed.y if @x < @bed.y
+
       if @position == :down
+        paint
       end
+    end
+
+    def paint
+      @machine.canvas.paint((@x-@bed.x), (@y-@bed.y), ChunkyPNG::Color::BLACK)
     end
   end
 end

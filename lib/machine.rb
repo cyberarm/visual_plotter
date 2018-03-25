@@ -1,14 +1,18 @@
 require_relative "machine/pen"
 require_relative "machine/bed"
+require_relative "machine/canvas "
 require_relative "machine/image_processor"
 
 class Machine
-  attr_reader :pen, :bed, :thread_safe_queue
+  attr_reader :pen, :bed, :canvas, :thread_safe_queue
   def initialize(width: 11*40, height: 8.5*40)
+    @thread_safe_queue = []
     @width, @height = width, height
+
     @bed = Bed.new(width: width, height: height)
     @pen = Pen.new(machine: self, x: @bed.x, y: @bed.y)
-    @thread_safe_queue = []
+    @pen.position = :down
+    @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
     @bed_padding = 100
 
     @status_text = Text.new(text: "Status: Waiting for file...", x: @bed.x, y: 30, size: 24)
@@ -20,8 +24,9 @@ class Machine
 
   def draw
     @bed.draw
-    @pen.draw
+    @canvas.draw
     draw_rails
+    @pen.draw
 
     @status_text.draw
     @x_pos.draw

@@ -67,7 +67,7 @@ class Machine
   def run_plotter
     if @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) && @pen.x-@bed.y < @chunky_image.width
       color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
-      @pen.plot = color < 50 ? true : false
+      @pen.plot = color < 75 ? true : false
       @pen.update
       @pen.x+=1
     elsif @pen.y-@bed.y > @chunky_image.height
@@ -107,6 +107,8 @@ class Machine
       return
     end
 
+    @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
+    @pen.x, @pen.y = @bed.x, @bed.y
     status(:okay, "Processing image...")
     ImageProcessor.new(file, self)
   end

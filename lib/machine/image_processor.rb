@@ -4,6 +4,7 @@ class Machine
     def initialize(filename, machine)
       @machine = machine
       @bed = machine.bed
+
       Thread.new do
         begin
           @machine.thread_safe_queue << proc {@machine.status(:okay, "Loading image into data structure...")}

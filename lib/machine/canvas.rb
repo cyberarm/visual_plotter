@@ -26,7 +26,7 @@ class Machine
     end
 
     def draw
-      @image.draw(@x,@y,100)
+      @image.draw(@x,@y,1)
     end
 
     def refresh

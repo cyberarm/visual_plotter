@@ -14,11 +14,15 @@ class Machine
     def paint(x, y, color = ChunkyPNG::Color::BLACK)
       raise "-1 index!" if x < 0 or y < 0
       unless @chunky_image.get_pixel(x,y) == nil
-        @chunky_image.set_pixel(x,y,color)
+        @chunky_image[x,y] = color
         # puts "Write> #{x}x#{y} -> #{color}"
       else
         puts "OutOfBounds> #{x}x#{y} -> #{color}"
       end
+    end
+
+    def save(filename)
+      @chunky_image.save(filename)
     end
 
     def draw

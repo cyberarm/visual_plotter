@@ -59,20 +59,19 @@ class Machine
     @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
 
     if @chunky_image
-      10.times { run_plotter }
+      @chunky_image.width.times { run_plotter }
       @canvas.refresh
     end
   end
 
   def run_plotter
     if @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) && @pen.x-@bed.y < @chunky_image.width
-      puts "PIXEL> #{@chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y)}"
       color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
       @pen.plot = color < 50 ? true : false
       @pen.update
       @pen.x+=1
     elsif @pen.y-@bed.y > @chunky_image.height
-      # Break
+      # @canvas.save("complete.png")
     else
       @pen.y+=1
       @pen.x = 100

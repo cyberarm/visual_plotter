@@ -6,6 +6,7 @@ class Machine
       @bed = machine.bed
       Thread.new do
         begin
+          @machine.thread_safe_queue << proc {@machine.status(:okay, "Loading image into data structure...")}
           @image = ChunkyPNG::Image.from_file(filename)
           process_image
           @machine.thread_safe_queue << proc {@machine.image_ready(@image)}
@@ -17,8 +18,10 @@ class Machine
     end
 
     def process_image
-      @image.grayscale!
+      @machine.thread_safe_queue << proc {@machine.status(:okay, "Scaling image...")}
       scale_image
+      @machine.thread_safe_queue << proc {@machine.status(:okay, "Converting to grayscale...")}
+      @image.grayscale!
       @image.save("test.png")
     end
 

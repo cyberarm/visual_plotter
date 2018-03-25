@@ -1,21 +1,26 @@
 class Button
   PADDING = 4
-  def initialize(window:, text: "Button", x: 0, y: 0, color: Gosu::Color::WHITE, background: Gosu::Color.rgb(25,0,100), &block)
+  def initialize(window:, text: "Button", x:, y:, color: Gosu::Color::RED, background: Gosu::Color.rgb(25,0,100), enabled: false, &block)
     @window = window
-    @text = Text.new(text: @text, x: x, y:  y, color: color)
+    @text = Text.new(text: @text, x: x, y:  y, color: color, size: 32)
     @x,@y = x,y
     @color, @background = color, background
     @hover = Gosu::Color.rgb(@background.red+10, @background.green+10, @background.blue+10)
+    @enabled = false
 
     @block = block
   end
 
   def draw
     @text.draw
-    if mouse_over?
-      Gosu.draw_rect(@x-PADDING, @y-PADDING, @text.width+PADDING, @text.size+PADDING, @hover)
+    if @enabled
+      if mouse_over?
+        Gosu.draw_rect(@x-PADDING, @y-PADDING, @text.width+PADDING, @text.size+PADDING, @hover)
+      else
+        Gosu.draw_rect(@x-PADDING, @y-PADDING, @text.width+PADDING, @text.size+PADDING, @background)
+      end
     else
-      Gosu.draw_rect(@x-PADDING, @y-PADDING, @text.width+PADDING, @text.size+PADDING, @background)
+      Gosu.draw_rect(@x-PADDING, @y-PADDING, @text.width+PADDING, @text.size+PADDING, Gosu::Color::GRAY)
     end
   end
 

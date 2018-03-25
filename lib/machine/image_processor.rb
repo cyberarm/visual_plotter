@@ -8,8 +8,10 @@ class Machine
         begin
           @image = ChunkyPNG::Image.from_file(filename)
           process_image
+          @machine.thread_safe_queue << proc {@machine.image_ready(@image)}
         rescue => e
-          @machine.status(:error, "Error: #{e}")
+          puts e
+          @machine.status(:error, "Error: #{e.strip("\n")}")
         end
       end
     end
@@ -18,8 +20,6 @@ class Machine
       @image.grayscale!
       scale_image
       @image.save("test.png")
-
-      @machine.image_ready(@image)
     end
 
     def scale_image

@@ -5,6 +5,27 @@ rescue LoadError
   require "chunky_png"
 end
 
+module Magick
+  # No worky... :(
+  class Image
+    def initialize(chunky_image)
+      @chunky_image = chunky_image
+    end
+
+    def columns
+      @chunky_image.width
+    end
+
+    def rows
+      @chunky_image.height
+    end
+
+    def to_blob
+      @chunky_image.to_rgba_stream
+    end
+  end
+end
+
 class VisualPlotter
   VERSION = "0.0.1alpha"
 end

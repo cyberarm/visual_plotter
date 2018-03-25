@@ -1,6 +1,6 @@
 class Machine
   class Bed
-    attr_reader :x, :y, :width, :height
+    attr_reader :x, :y, :width, :height, :color
     def initialize(color: Gosu::Color::WHITE, x: 100, y: 100, width:, height:)
       @color = color
       @x,@y = x,y

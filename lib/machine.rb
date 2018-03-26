@@ -20,7 +20,7 @@ class Machine
     @plotter_threshold = 90
     @plotter_run = false
     @plotter_forward = true
-    @plotter_steps = 1
+    @plotter_steps = @bed.width
 
     @status_text = Text.new(text: "Status: Waiting for file...", x: @bed.x, y: 30, size: 24)
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
@@ -105,11 +105,10 @@ class Machine
       (@pen.x-@bed.x < @chunky_image.width && @pen.x-@bed.x < @bed.width)
       plot
 
-    elsif @pen.y-@bed.y > @bed.height-1
+    elsif @pen.y-@bed.y > @chunky_image.height-1
       @plotter_run = false
       status(:okay, "Plotting complete.")
     else
-      puts "No more."
       @pen.y+=1
     end
   end

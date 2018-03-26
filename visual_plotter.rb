@@ -28,7 +28,7 @@ module Magick
 end
 
 class VisualPlotter
-  VERSION = "0.0.1alpha"
+  VERSION = "1.0.0 Beta"
 end
 
 require_relative "lib/text"

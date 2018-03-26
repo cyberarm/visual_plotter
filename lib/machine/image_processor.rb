@@ -8,7 +8,7 @@ class Machine
       @machine.status(:okay, "Loading image into data structure...")
       @machine.update
       begin
-        # NOTE: Gosu Image's are NOT thread safe, they'll be blank if queried from a thread.
+        # NOTE: Gosu::Image is NOT thread safe, they'll be blank if queried from a thread.
         gosu_image = Gosu::Image.new(file)
         @image = ChunkyPNG::Image.from_rgba_stream(gosu_image.width, gosu_image.height, gosu_image.to_blob)
         gosu_image = nil

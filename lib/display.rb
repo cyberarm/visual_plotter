@@ -4,7 +4,7 @@ class Display < Gosu::Window
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
 
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
-    Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.plotter_run}
+    Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.replot}
     Button.new(window: self, text: "Save", x: 200, y: @machine.bed.y+@machine.bed.height+50) {@machine.save}
     Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50) {}
     Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50) {close}
@@ -35,7 +35,6 @@ class Display < Gosu::Window
       @machine.plotter_run = !@machine.plotter_run
     when Gosu::KbS
       @machine.save if !@machine.plotter_run
-      @machine.status(:okay, "Saved canvas.") if !@machine.plotter_run
     when Gosu::KbF5
       @machine.replot
     when Gosu::KbHome

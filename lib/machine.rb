@@ -15,7 +15,7 @@ class Machine
     @bed = Bed.new(width: width, height: height)
     @pen = Pen.new(machine: self, x: @bed.x, y: @bed.y)
     @pen.plot = false
-    @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
+    new_canvas
     @bed_padding = 100
     @invert_plotter = false
     @plotter_threshold = 90
@@ -115,11 +115,12 @@ class Machine
   end
 
   def save(name = "complete.png")
-    @canvas.save("complete.png")
+    @canvas.save("complete.png") if !@plotter_run
+    status(:okay, "Saved canvas.") if !@plotter_run
   end
 
   def replot
-    @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
+    new_canvas
     @pen.x = @bed.x
     @pen.y = @bed.y
     @plotter_run = true
@@ -152,21 +153,21 @@ class Machine
     @status_text.text = "Status: #{string}"
   end
 
+  def new_canvas
+    @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
+  end
+
   def image_ready(image)
     @chunky_image = image
     # @chunky_image.save("temp.png")
-    @plotter_run = true
     @target_image = Gosu::Image.new(Magick::Image.new(image))
-    # @target_image = Gosu::Image.new("temp.png")
-    # puts "IMAGE: #{@target_image.width}x#{@target_image.height}"
-    # @target_image.save("post_test.png")
     status(:okay, "Image processed.")
   end
 
   def process_file(file)
     name= file.gsub("\\", "/").split("/").last
     ext = name.split(".").last
-    if ext.is_a?(Array)# || ext.downcase != "png"
+    if ext.is_a?(Array)
       status(:error, "File #{name} is of an unknown type (.#{ext}), only the common types are supported.")
       return
     end
@@ -182,7 +183,7 @@ class Machine
       # HALT THE WORLD AND FREE THE MEMORY?
       GC.start(full_mark: true, immediate_sweep: true)
 
-      @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
+      new_canvas
       @pen.x, @pen.y = @bed.x, @bed.y
       ImageProcessor.new(file, self)
     rescue => e

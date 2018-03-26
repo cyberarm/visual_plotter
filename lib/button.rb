@@ -11,7 +11,7 @@ class Button
     @text = Text.new(text: text, x: x+PADDING, y:  y, z: 2, color: color, size: 32)
     @x,@y = x+PADDING,y
     @color, @background = color, background
-    @hover = Gosu::Color.rgb(@background.red+10, @background.green+10, @background.blue+10)
+    @hover = Gosu::Color.rgb(@background.red+50, @background.green+50, @background.blue+50)
     @enabled = enabled
 
     @block = block
@@ -36,7 +36,7 @@ class Button
 
   def mouse_over?
     if @window.mouse_x.between?(@x-PADDING, @x+@text.width+PADDING)
-      if @window.mouse_y.between?(@y-PADDING, @y+@text.width+(PADDING*2))
+      if @window.mouse_y.between?(@y-PADDING, @y+@text.size)
         true
       end
     end

@@ -21,8 +21,8 @@ class Machine
     def update
       @x = @bed.x+@bed.width-1 if @x > @bed.x+(@bed.width-1)
       @x = @bed.x if @x < @bed.x
-      @y = @bed.y+@bed.height-1 if @x > @bed.y+(@bed.height-1)
-      @y = @bed.y if @x < @bed.y
+      @y = @bed.y+@bed.height-1 if @y > @bed.y+(@bed.height-1)
+      @y = @bed.y if @y < @bed.y
 
       if @plot
         paint

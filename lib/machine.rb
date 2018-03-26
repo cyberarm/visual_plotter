@@ -5,6 +5,7 @@ require_relative "machine/image_processor"
 
 class Machine
   attr_reader :pen, :bed, :canvas, :thread_safe_queue, :plotter_threshold, :invert_plotter
+  attr_accessor :plotter_run
   def initialize(window:, width: 11*40, height: 8.5*40)
     @thread_safe_queue = []
     @window = window
@@ -17,6 +18,7 @@ class Machine
     @bed_padding = 100
     @invert_plotter = false
     @plotter_threshold = 90
+    @plotter_run = false
 
     @status_text = Text.new(text: "Status: Waiting for file...", x: @bed.x, y: 30, size: 24)
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
@@ -49,9 +51,9 @@ class Machine
 
   def draw_rails
     # X Axis
-    Gosu.draw_rect(@pen.x-1, @bed.y, 3, @bed.height, Gosu::Color::CYAN)
+    Gosu.draw_rect(@pen.x-1, @bed.y, 3, @bed.height, Gosu::Color::CYAN, 100)
     # Y Axis
-    Gosu.draw_rect(@bed.x, @pen.y-1, @bed.width, 3, Gosu::Color::CYAN)
+    Gosu.draw_rect(@bed.x, @pen.y-1, @bed.width, 3, Gosu::Color::CYAN, 100)
   end
 
   def update
@@ -59,11 +61,11 @@ class Machine
     @y_pos.text = "Y: #{(@pen.y-@bed.y).round(2)}"
     @pen_mode.text = "Plot: #{@pen.plot}"
     @fps.text = "FPS: #{Gosu.fps}"
-    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}"
+    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}"
 
     @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
 
-    if @chunky_image
+    if @chunky_image && @plotter_run
       @chunky_image.width.times { run_plotter if @chunky_image }
       @canvas.refresh
     end
@@ -83,12 +85,19 @@ class Machine
       @pen.x+=1
     elsif @pen.y-@bed.y > @bed.height-1
       @canvas.save("complete.png")
-      @chunky_image = nil
+      @plotter_run = false
       status(:okay, "Plotting complete.")
     else
       @pen.y+=1
-      @pen.x = 100
+      @pen.x = @bed.x
     end
+  end
+
+  def replot
+    @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
+    @pen.x = @bed.x
+    @pen.y = @bed.y
+    @plotter_run = true
   end
 
   # invert plotter color choices
@@ -116,6 +125,7 @@ class Machine
   def image_ready(image)
     @chunky_image = image
     # @chunky_image.save("temp.png")
+    @plotter_run = true
     @target_image = Gosu::Image.new(Magick::Image.new(image))
     # @target_image = Gosu::Image.new("temp.png")
     # puts "IMAGE: #{@target_image.width}x#{@target_image.height}"
@@ -131,21 +141,24 @@ class Machine
       return
     end
 
-    @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
-    @pen.x, @pen.y = @bed.x, @bed.y
     status(:okay, "Processing image...")
-    @chunky_image = nil
 
-    if ext.downcase == "png"
+    begin
+      @chunky_image = nil
+      @target_image = nil
+      @canvas.clear
+      @canvas = nil
+
+      # HALT THE WORLD AND FREE THE MEMORY?
+      GC.start(full_mark: true, immediate_sweep: true)
+
+      @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
+      @pen.x, @pen.y = @bed.x, @bed.y
       ImageProcessor.new(file, self)
-    else
-      begin
-        img = Gosu::Image.new(file)
-      rescue
-        status(:error, "Unable to open #{name}, is it an image?")
-        return
-      end
-      ImageProcessor.new(img, self, true)
+    rescue => e
+      puts e, e.class
+      status(:error, "Unable to open #{name}, is it an image?")
+      return
     end
   end
 end

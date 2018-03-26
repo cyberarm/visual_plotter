@@ -1,24 +1,26 @@
 class Machine
   class ImageProcessor
     attr_reader :image, :ready
-    def initialize(filename, machine, from_blob = false)
+    def initialize(file, machine)
       @machine = machine
       @bed = machine.bed
 
-      Thread.new do
-        begin
-          @machine.thread_safe_queue << proc {@machine.status(:okay, "Loading image into data structure...")}
-          if from_blob
-            @image = ChunkyPNG::Image.from_rgb_stream(filename.width, filename.height, filename.to_blob)
-          else
-            @image = ChunkyPNG::Image.from_file(filename)
-          end
+      @machine.status(:okay, "Loading image into data structure...")
+      @machine.update
+      begin
+        # NOTE: Gosu Image's are NOT thread safe, they'll be blank if queried from a thread.
+        gosu_image = Gosu::Image.new(file)
+        @image = ChunkyPNG::Image.from_rgba_stream(gosu_image.width, gosu_image.height, gosu_image.to_blob)
+        gosu_image = nil
+
+        Thread.new do
           process_image
+          @machine.thread_safe_queue.clear
           @machine.thread_safe_queue << proc {@machine.image_ready(@image)}
-        # rescue => e
-          # puts e
-          # @machine.thread_safe_queue << proc {@machine.status(:error, "Error: #{e.to_s.strip}")}
         end
+      rescue NoMemoryError
+        @machine.status(:error, "Ran out of them delicious bits. Try a smaller image.")
+        puts "Ran out of them delicious bits. :("
       end
     end
 
@@ -27,14 +29,15 @@ class Machine
       scale_image
       @machine.thread_safe_queue << proc {@machine.status(:okay, "Converting to grayscale...")}
       @image.grayscale!
-      @image.save("test.png")
     end
 
     def scale_image
-      ratio =  @image.height.to_f / @image.width.to_f
-      width = @bed.width.to_f * ratio
-      height = @bed.height.to_f * ratio
-      puts "W #{width.to_i}, H #{height.to_i} -> #{ratio}"
+      scale = [@bed.width.to_f/@image.width, @bed.height.to_f/@image.height].min
+      puts "scale: #{scale}"
+      width = @image.width * scale
+      height = @image.height * scale
+
+      puts "W #{width.to_i}, H #{height.to_i} -> #{scale}"
       @image.resample_bilinear!(width.to_i.clamp(1, @bed.width), height.to_i.clamp(1, @bed.height))
     end
   end

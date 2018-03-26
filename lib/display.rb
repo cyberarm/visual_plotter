@@ -26,6 +26,10 @@ class Display < Gosu::Window
     case id
     when Gosu::KbI
       @machine.invert_plotter
+    when Gosu::KbR
+      @machine.plotter_run = !@machine.plotter_run
+    when Gosu::KbF5
+      @machine.replot
     when Gosu::MsWheelUp
       @machine.plotter_threshold+=1
     when Gosu::MsWheelDown

@@ -11,5 +11,9 @@ Drop an image in the window and watch it plot it out.
 * `r` - Run - Toggle for running plotter
 * `s` - Save - Saves canvas as complete.png
 
+# Dependencies
+### Gosu (>= 0.13.1)
+### ChunkyPNG (>= 1.3.10)
+
 # Media
 ![Screenshot](https://raw.githubusercontent.com/cyberarm/visual_plotter/master/media/screenshot.png)

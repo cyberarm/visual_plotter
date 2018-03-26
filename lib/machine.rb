@@ -2,6 +2,7 @@ require_relative "machine/pen"
 require_relative "machine/bed"
 require_relative "machine/canvas "
 require_relative "machine/image_processor"
+require_relative "machine/compiler"
 
 class Machine
   attr_reader :pen, :bed, :canvas, :thread_safe_queue, :plotter_threshold, :invert_plotter, :plotter_forward, :plotter_steps

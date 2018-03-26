@@ -4,18 +4,21 @@ class Display < Gosu::Window
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
 
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
-    @plot_button  = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.plot}
-    @close_button = Button.new(window: self, text: "Close", x: 200, y: @machine.bed.y+@machine.bed.height+50) {close}
+    Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.plotter_run}
+    Button.new(window: self, text: "Save", x: 200, y: @machine.bed.y+@machine.bed.height+50) {@machine.save}
+    Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50) {}
+    Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50) {close}
   end
 
   def draw
     @machine.draw
-    @plot_button.draw
-    @close_button.draw
+
+    Button.list.each(&:draw)
   end
 
   def update
     @machine.update
+    Button.list.each(&:update)
   end
 
   def needs_cursor?
@@ -23,6 +26,8 @@ class Display < Gosu::Window
   end
 
   def button_up(id)
+    Button.list.each {|b| b.button_up(id)}
+
     case id
     when Gosu::KbI
       @machine.invert_plotter

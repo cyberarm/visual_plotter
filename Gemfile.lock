@@ -9,7 +9,7 @@ PLATFORMS
 
 DEPENDENCIES
   chunky_png
-  gosu (>= 0.13.0)
+  gosu (>= 0.13.1)
 
 BUNDLED WITH
    1.15.4

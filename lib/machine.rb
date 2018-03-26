@@ -4,7 +4,7 @@ require_relative "machine/canvas "
 require_relative "machine/image_processor"
 
 class Machine
-  attr_reader :pen, :bed, :canvas, :thread_safe_queue, :plotter_threshold, :invert_plotter
+  attr_reader :pen, :bed, :canvas, :thread_safe_queue, :plotter_threshold, :invert_plotter, :plotter_forward, :plotter_steps
   attr_accessor :plotter_run
   def initialize(window:, width: 11*40, height: 8.5*40)
     @thread_safe_queue = []
@@ -19,6 +19,8 @@ class Machine
     @invert_plotter = false
     @plotter_threshold = 90
     @plotter_run = false
+    @plotter_forward = true
+    @plotter_steps = 1
 
     @status_text = Text.new(text: "Status: Waiting for file...", x: @bed.x, y: 30, size: 24)
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
@@ -61,36 +63,59 @@ class Machine
     @y_pos.text = "Y: #{(@pen.y-@bed.y).round(2)}"
     @pen_mode.text = "Plot: #{@pen.plot}"
     @fps.text = "FPS: #{Gosu.fps}"
-    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}"
+    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}, forward: #{@plotter_forward}, steps: #{@plotter_steps}"
 
     @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
 
     if @chunky_image && @plotter_run
-      @chunky_image.width.times { run_plotter if @chunky_image }
+      @plotter_steps.times { run_plotter if @chunky_image }
+      # @chunky_image.width.times { run_plotter if @chunky_image }
       @canvas.refresh
     end
   end
 
-  def run_plotter
-    if @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) && (@pen.x-@bed.x < @chunky_image.width && @pen.x-@bed.x < @bed.width)
-      status(:okay, "Plotting...")
-
-      color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
-      if @invert_plotter
-        @pen.plot = (color > @plotter_threshold) ? true : false
+  def plot
+    status(:okay, "Plotting...")
+    color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
+    if @invert_plotter
+      @pen.plot = (color > @plotter_threshold) ? true : false
+    else
+      @pen.plot = (color < @plotter_threshold) ? true : false
+    end
+    @pen.update
+    if @plotter_forward
+      if (@pen.x-@bed.x)+1 < @chunky_image.width
+        @pen.x+=1
       else
-        @pen.plot = (color < @plotter_threshold) ? true : false
+        @plotter_forward = false
       end
-      @pen.update
-      @pen.x+=1
+    else
+      if (@pen.x-@bed.x)-1 > 0
+        @pen.x-=1
+      else
+        @plotter_forward = true
+        @pen.x = @bed.x
+        @pen.y+=1
+      end
+    end
+  end
+
+  def run_plotter
+    if @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) &&
+      (@pen.x-@bed.x < @chunky_image.width && @pen.x-@bed.x < @bed.width)
+      plot
+
     elsif @pen.y-@bed.y > @bed.height-1
-      @canvas.save("complete.png")
       @plotter_run = false
       status(:okay, "Plotting complete.")
     else
+      puts "No more."
       @pen.y+=1
-      @pen.x = @bed.x
     end
+  end
+
+  def save(name = "complete.png")
+    @canvas.save("complete.png")
   end
 
   def replot
@@ -108,6 +133,11 @@ class Machine
   def plotter_threshold=int
     int = int.clamp(1, 255)
     @plotter_threshold = int
+  end
+
+  def plotter_steps=int
+    int = int.clamp(1, @bed.width)
+    @plotter_steps = int
   end
 
   def status(level, string)

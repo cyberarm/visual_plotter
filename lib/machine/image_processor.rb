@@ -20,6 +20,7 @@ class Machine
         end
       rescue NoMemoryError
         @machine.status(:error, "Ran out of them delicious bits. Try a smaller image.")
+        @image = nil
         puts "Ran out of them delicious bits. :("
       end
     end

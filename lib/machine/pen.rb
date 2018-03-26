@@ -14,8 +14,8 @@ class Machine
     end
 
     def draw
-      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @color) unless @plot
-      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @down_color) if @plot
+      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @color, 1000) unless @plot
+      Gosu.draw_rect(@x-@size/2.0, @y-@size/2.0, @size, @size, @down_color, 1000) if @plot
     end
 
     def update

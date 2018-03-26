@@ -3,7 +3,7 @@ class Display < Gosu::Window
     super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, false)
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
 
-    @machine = Machine.new(window: self)
+    @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
     @plot_button  = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.plot}
     @close_button = Button.new(window: self, text: "Close", x: 200, y: @machine.bed.y+@machine.bed.height+50) {close}
   end
@@ -28,8 +28,19 @@ class Display < Gosu::Window
       @machine.invert_plotter
     when Gosu::KbR
       @machine.plotter_run = !@machine.plotter_run
+    when Gosu::KbS
+      @machine.save if !@machine.plotter_run
+      @machine.status(:okay, "Saved canvas.") if !@machine.plotter_run
     when Gosu::KbF5
       @machine.replot
+    when Gosu::KbHome
+      @machine.plotter_steps = @machine.bed.width
+    when Gosu::KbEnd
+      @machine.plotter_steps = 1
+    when Gosu::KbEqual
+      @machine.plotter_steps+=1
+    when Gosu::KbMinus
+      @machine.plotter_steps-=1
     when Gosu::MsWheelUp
       @machine.plotter_threshold+=1
     when Gosu::MsWheelDown

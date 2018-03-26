@@ -1,3 +1,4 @@
+require "time"
 require "gosu"
 begin
   require "oily_png"

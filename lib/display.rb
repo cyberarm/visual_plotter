@@ -6,7 +6,7 @@ class Display < Gosu::Window
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
     Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.replot}
     Button.new(window: self, text: "Save", x: 200, y: @machine.bed.y+@machine.bed.height+50) {@machine.save}
-    Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50) {}
+    Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
     Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50) {close}
   end
 

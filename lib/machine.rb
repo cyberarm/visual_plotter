@@ -5,7 +5,7 @@ require_relative "machine/image_processor"
 require_relative "machine/compiler"
 
 class Machine
-  attr_reader :pen, :bed, :canvas, :thread_safe_queue, :plotter_threshold, :invert_plotter, :plotter_forward, :plotter_steps
+  attr_reader :pen, :bed, :compiler, :canvas, :thread_safe_queue, :plotter_threshold, :invert_plotter, :plotter_forward, :plotter_steps
   attr_accessor :plotter_run
   def initialize(window:, width: 11*40, height: 8.5*40)
     @thread_safe_queue = []
@@ -14,6 +14,7 @@ class Machine
 
     @bed = Bed.new(width: width, height: height)
     @pen = Pen.new(machine: self, x: @bed.x, y: @bed.y)
+    @compiler = Compiler.new
     @pen.plot = false
     new_canvas
     @bed_padding = 100
@@ -84,6 +85,20 @@ class Machine
       @pen.plot = (color < @plotter_threshold) ? true : false
     end
     @pen.update
+
+    if @compiler.events.size == 0
+      @compiler.add_event(type: "pen_up")
+      @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
+    else
+      @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
+
+      if @pen.plot
+        @compiler.add_event(type: "pen_down")
+      else
+        @compiler.add_event(type: "pen_up")
+      end
+    end
+
     if @plotter_forward
       if (@pen.x-@bed.x)+1 < @chunky_image.width
         @pen.x+=1
@@ -158,6 +173,7 @@ class Machine
   end
 
   def image_ready(image)
+    @compiler.reset
     @chunky_image = image
     # @chunky_image.save("temp.png")
     @target_image = Gosu::Image.new(Magick::Image.new(image))

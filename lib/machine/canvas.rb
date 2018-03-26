@@ -22,7 +22,7 @@ class Machine
     end
 
     def save(filename)
-      @chunky_image.save(filename)
+      @image.save(filename)
     end
 
     def draw

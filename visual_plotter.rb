@@ -5,8 +5,9 @@ rescue LoadError
   require "chunky_png"
 end
 
+Thread.abort_on_exception = true
+
 module Magick
-  # No worky... :(
   class Image
     def initialize(chunky_image)
       @chunky_image = chunky_image

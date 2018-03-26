@@ -24,6 +24,12 @@ class Display < Gosu::Window
 
   def button_up(id)
     case id
+    when Gosu::KbI
+      @machine.invert_plotter
+    when Gosu::MsWheelUp
+      @machine.plotter_threshold+=1
+    when Gosu::MsWheelDown
+      @machine.plotter_threshold-=1
     when Gosu::KbEscape
       close
       # exit

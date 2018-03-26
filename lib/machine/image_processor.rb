@@ -1,14 +1,18 @@
 class Machine
   class ImageProcessor
     attr_reader :image, :ready
-    def initialize(filename, machine)
+    def initialize(filename, machine, from_blob = false)
       @machine = machine
       @bed = machine.bed
 
       Thread.new do
         begin
           @machine.thread_safe_queue << proc {@machine.status(:okay, "Loading image into data structure...")}
-          @image = ChunkyPNG::Image.from_file(filename)
+          if from_blob
+            @image = ChunkyPNG::Image.from_rgba_stream(filename.to_blob, filename.width, filename.height)
+          else
+            @image = ChunkyPNG::Image.from_file(filename)
+          end
           process_image
           @machine.thread_safe_queue << proc {@machine.image_ready(@image)}
         rescue => e

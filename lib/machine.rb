@@ -59,19 +59,24 @@ class Machine
     @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
 
     if @chunky_image
-      @chunky_image.width.times { run_plotter }
+      @chunky_image.width.times { run_plotter if @chunky_image }
       @canvas.refresh
     end
   end
 
   def run_plotter
     if @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) && @pen.x-@bed.y < @chunky_image.width
+      status(:okay, "Plotting...")
+
       color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
       @pen.plot = color < 75 ? true : false
       @pen.update
       @pen.x+=1
     elsif @pen.y-@bed.y > @chunky_image.height
       # @canvas.save("complete.png")
+      puts "TRUE"
+      @chunky_image = nil
+      status(:okay, "Plotting complete.")
     else
       @pen.y+=1
       @pen.x = 100
@@ -101,15 +106,22 @@ class Machine
   end
 
   def process_file(file)
-    ext = file.gsub("\\", "/").split("/").last.split(".").last
-    if ext.is_a?(Array)
-      status(:error, "File #{file} is of an unknown type (.#{ext}), only '.png' is supported.")
+    name= file.gsub("\\", "/").split("/").last
+    ext = name.split(".").last
+    if ext.is_a?(Array)# || ext.downcase != "png"
+      status(:error, "File #{name} is of an unknown type (.#{ext}), only the common types are supported.")
       return
     end
 
     @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
     @pen.x, @pen.y = @bed.x, @bed.y
     status(:okay, "Processing image...")
-    ImageProcessor.new(file, self)
+
+    if ext.downcase == "png"
+      ImageProcessor.new(file, self)
+    else
+      img = Gosu::Image.new(file)
+      ImageProcessor.new(img, self, true)
+    end
   end
 end

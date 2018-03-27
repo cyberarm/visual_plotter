@@ -2,8 +2,8 @@ class Text
   CACHE = {}
 
   attr_accessor :text, :x, :y, :z, :color
-  attr_reader :size
-  def initialize(text:, x: 0, y: 0, z: 0, font: Gosu.default_font_name, size: 18, color: Gosu::Color::WHITE)
+  attr_reader :size, :font
+  def initialize(text: "", x: 0, y: 0, z: 0, font: Gosu.default_font_name, size: 18, color: Gosu::Color::WHITE)
     @text    = text
     @x,@y,@z = x,y,z
     @font_name = font

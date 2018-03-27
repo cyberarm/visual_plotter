@@ -17,7 +17,10 @@ class Machine
         @chunky_image[x,y] = color
         # puts "Write> #{x}x#{y} -> #{color}"
       else
-        puts "OutOfBounds> #{x}x#{y} -> #{color}"
+        @machine.status(:error, "Pen target is outside of the canvas boundry, you may have a faulty rcode file.")
+        @machine.plotter_run = false
+        # puts "OutOfBounds> #{x}x#{y} -> #{color} | Machine plot: #{@machine.plotter_run}"
+        return
       end
     end
 

@@ -45,7 +45,8 @@ class Button
   def button_up(id)
     case id
     when Gosu::MsLeft
-      if mouse_over?
+      if @enabled && mouse_over?
+        puts "Button> #{@text.text} id: #{id}"
         @block.call if @block
       end
     end

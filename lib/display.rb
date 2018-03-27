@@ -2,23 +2,50 @@ class Display < Gosu::Window
   def initialize
     super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, false)
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
+    @show_legal  = false
+    @legal_text = Gosu::LICENSES.split("\n")
+    @text = Text.new(size: 24)
+    @escape = 0
 
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
-    Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50) {@machine.replot}
-    Button.new(window: self, text: "Save", x: 200, y: @machine.bed.y+@machine.bed.height+50) {@machine.save}
-    Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
+    @plot = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.replot}
+    @save = Button.new(window: self, text: "Save", x: 200, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.save}
+    @compile = Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
     Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50) {close}
+
+    @legal = Button.new(window: self, text: "Show Legal", x: @machine.bed.x, y: self.height-50) {toggle_legal}
+  end
+
+  def toggle_legal
+    @show_legal = @show_legal ? false : true
+  end
+
+  def render_legal
+    Gosu.draw_rect(0, 0, self.width, self.height-100, Gosu::Color.rgba(10,10,10,250), 1001)
+    @legal_text.each_with_index do |line, index|
+      y = index*25
+      @text.font.draw(line, 25, 100+y, 1002)
+    end
   end
 
   def draw
     @machine.draw
 
-    Button.list.each(&:draw)
+    @legal.draw if @show_legal
+    Button.list.each(&:draw) unless @show_legal
+
+    render_legal if @show_legal
   end
 
   def update
-    @machine.update
-    Button.list.each(&:update)
+    @legal.update if @show_legal
+    unless @show_legal
+      @machine.update
+      @plot.enabled = (@machine.chunky_image || @machine.rcode_events) ? true : false
+      @save.enabled = (@machine.chunky_image || @machine.rcode_events) ? true : false
+      @compile.enabled = ((@machine.pen.x != @machine.bed.x || @machine.pen.y != @machine.bed.y) && !@machine.plotter_run && !@machine.rcode_events) ? true : false
+      Button.list.each(&:update)
+    end
   end
 
   def needs_cursor?
@@ -26,32 +53,16 @@ class Display < Gosu::Window
   end
 
   def button_up(id)
-    Button.list.each {|b| b.button_up(id)}
+    @legal.button_up(id) if @show_legal && id == Gosu::MsLeft
+    Button.list.each {|b| b.button_up(id)} if !@show_legal
+    @machine.button_up(id)
 
     case id
-    when Gosu::KbI
-      @machine.invert_plotter
-    when Gosu::KbR
-      @machine.plotter_run = !@machine.plotter_run
-    when Gosu::KbS
-      @machine.save if !@machine.plotter_run
-    when Gosu::KbF5
-      @machine.replot
-    when Gosu::KbHome
-      @machine.plotter_steps = @machine.bed.width
-    when Gosu::KbEnd
-      @machine.plotter_steps = 1
-    when Gosu::KbEqual
-      @machine.plotter_steps+=1
-    when Gosu::KbMinus
-      @machine.plotter_steps-=1
-    when Gosu::MsWheelUp
-      @machine.plotter_threshold+=1
-    when Gosu::MsWheelDown
-      @machine.plotter_threshold-=1
     when Gosu::KbEscape
-      close
-      # exit
+      @escape += 1
+      close if @escape > 1
+    else
+      @escape = 0
     end
   end
 

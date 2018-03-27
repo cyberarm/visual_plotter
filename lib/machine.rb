@@ -5,7 +5,11 @@ require_relative "machine/image_processor"
 require_relative "machine/compiler"
 
 class Machine
-  attr_reader :pen, :bed, :compiler, :canvas, :thread_safe_queue, :plotter_threshold, :invert_plotter, :plotter_forward, :plotter_steps
+  attr_reader :pen, :bed, :compiler, :canvas, :thread_safe_queue
+  attr_reader :plotter_threshold, :invert_plotter, :plotter_forward, :plotter_steps
+
+  attr_reader :rcode_events, :chunky_image
+
   attr_accessor :plotter_run
   def initialize(window:, width: 11*40, height: 8.5*40)
     @thread_safe_queue = []
@@ -26,7 +30,8 @@ class Machine
     @rcode_events = nil
     @rcode_index  = 0
 
-    @status_text = Text.new(text: "Status: Waiting for file...", x: @bed.x, y: 30, size: 24)
+    @status_text = Text.new(text: "", x: @bed.x, y: 30, size: 24)
+    status(:okay, "Status: Waiting for file...")
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
     @y_pos = Text.new(text: "Y: ?", x: @bed.x+@bed.width+10, y: @bed.y+@bed.height/2)
     @pen_mode = Text.new(text: "Plot: false", x: @bed.x+@bed.width/2, y: @bed.y+@bed.height+10)
@@ -72,17 +77,46 @@ class Machine
     @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
 
     if @chunky_image && @plotter_run
-      @plotter_steps.times { run_plotter if @chunky_image }
+      @plotter_steps.times { run_plotter if @plotter_run }
       # @chunky_image.width.times { run_plotter if @chunky_image }
       @canvas.refresh
     elsif @rcode_events.is_a?(Array) && @plotter_run
-      @plotter_steps.times { rcode_plot }
+      @plotter_steps.times { rcode_plot if @plotter_run }
       @canvas.refresh
     end
   end
 
+  def button_up(id)
+    case id
+    when Gosu::KbI
+      invert_plotter
+    when Gosu::KbR
+      @plotter_run = !@plotter_run
+    when Gosu::KbS
+      save if !@plotter_run
+    when Gosu::KbF5
+      replot
+    when Gosu::KbHome
+      if @window.button_down?(Gosu::KbLeftControl || Gosu::KbRightControl)
+        @plotter_steps = (@bed.width*@bed.height).to_i
+      else
+        @plotter_steps = @bed.width
+      end
+    when Gosu::KbEnd
+      @plotter_steps = 1
+    when Gosu::KbEqual
+      @plotter_steps+=1
+    when Gosu::KbMinus
+      @plotter_steps-=1
+    when Gosu::MsWheelUp
+      @plotter_threshold+=1
+    when Gosu::MsWheelDown
+      @plotter_threshold-=1
+    end
+  end
+
   def plot
-    status(:okay, "Plotting...")
+    status(:busy, "Plotting...")
     color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
     if @invert_plotter
       @pen.plot = (color > @plotter_threshold) ? true : false
@@ -146,12 +180,13 @@ class Machine
     @pen.y = @bed.y
     @plotter_run = true
     @rcode_index = 0
+    @compiler.events.clear
   end
 
   def plot_from_rcode(file)
     @rcode_events = Compiler.decompile(file)
-    replot
-    status(:okay, "Plotting from #{file.gsub("\\", "/").split("/").last}...")
+    @rcode_file = file
+    status(:okay, "Loaded #{get_filename(file)}.")
   end
 
   def rcode_stats
@@ -160,12 +195,13 @@ class Machine
 
   def rcode_plot
     instruction = @rcode_events[@rcode_index]
-    @rcode_index+=1 if @rcode_index < @rcode_events.size
+    @rcode_index+=1 if @rcode_index < @rcode_events.size-1
     if @rcode_index >= @rcode_events.size-1
       @plotter_run = false
-      status(:okay, "Plotting from rcode complete.")
+      status(:okay, "Plotted rcode.")
       return
     end
+    status(:okay, "Plotting from #{get_filename(@rcode_file)}...")
     case instruction.type.downcase
     when "home"
       @pen.x = @bed.x
@@ -177,12 +213,16 @@ class Machine
     when "move"
       if @pen.plot
         until(@pen.y == @bed.y+instruction.y)
+          break unless @plotter_run
+
           @pen.y+=1
           @pen.paint
         end
 
         x_target = @bed.x+instruction.x
         until(@pen.x == x_target)
+          break unless @plotter_run
+
           if x_target < @pen.x
             @pen.x-=1
             @pen.paint
@@ -218,7 +258,9 @@ class Machine
   def status(level, string)
     case level
     when :okay
-      @status_text.color = Gosu::Color::WHITE
+      @status_text.color = Gosu::Color.rgb(25, 200, 25)
+    when :busy
+      @status_text.color = Gosu::Color.rgb(255, 127, 0)
     when :warn
       @status_text.color = Gosu::Color::YELLOW
     when :error
@@ -231,16 +273,20 @@ class Machine
     @canvas = Canvas.new(machine: self, x: @bed.x, y: @bed.y, width: @bed.width, height: @bed.height)
   end
 
-  def image_ready(image)
+  def image_ready(image, file)
     @compiler.reset
     @chunky_image = image
     # @chunky_image.save("temp.png")
     @target_image = Gosu::Image.new(Magick::Image.new(image))
-    status(:okay, "Image processed.")
+    status(:okay, "Image #{get_filename(file)} ready.")
+  end
+
+  def get_filename(file)
+    file.gsub("\\", "/").split("/").last
   end
 
   def process_file(file)
-    name= file.gsub("\\", "/").split("/").last
+    name= get_filename(file)
     ext = name.split(".").last
     if ext.is_a?(Array)
       status(:error, "File #{name} is of an unknown type (.#{ext}), only the common types are supported.")
@@ -268,6 +314,9 @@ class Machine
       @target_image = nil
       @canvas.clear
       @canvas = nil
+
+      @rcode_events = nil
+      @rcode_index = 0
 
       # HALT THE WORLD AND FREE THE MEMORY?
       GC.start(full_mark: true, immediate_sweep: true)

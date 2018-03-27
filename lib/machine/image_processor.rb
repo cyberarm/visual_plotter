@@ -4,6 +4,7 @@ class Machine
     def initialize(file, machine)
       @machine = machine
       @bed = machine.bed
+      @file = file
 
       @machine.status(:okay, "Loading image into data structure...")
       @machine.update
@@ -16,7 +17,7 @@ class Machine
         Thread.new do
           process_image
           @machine.thread_safe_queue.clear
-          @machine.thread_safe_queue << proc {@machine.image_ready(@image)}
+          @machine.thread_safe_queue << proc {@machine.image_ready(@image, @file)}
         end
       rescue NoMemoryError
         @machine.status(:error, "Ran out of them delicious bits. Try a smaller image.")

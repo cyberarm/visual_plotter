@@ -62,6 +62,7 @@ class Machine
     def compile(name = "compile")
       File.open("#{name}.rcode", "w") do |file|
         file.write "# Compiled at: #{Time.now.iso8601}\n"
+        file.write "# Compiled with: inverted #{@machine.invert_plotter}, threshold #{@machine.plotter_threshold}\n"
         @events.each do |event|
           if event.x
             file.write "#{event.type} #{event.x}:#{event.y}\n"

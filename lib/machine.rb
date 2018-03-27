@@ -176,11 +176,22 @@ class Machine
       @pen.plot = true
     when "move"
       if @pen.plot
-        @pen.y = @bed.y+instruction.y # bad idea, fixme?
-        if @bed.x+instruction.x < @pen.x
-          @pen.x-(@bed.x+instruction.x).times {@pen.x-=1 if @pen.x-1 > @bed.x; @pen.paint}
-        else
-          @pen.x-(@bed.x+instruction.x).times {@pen.x+=1 if @pen.x+1 < @bed.x+@bed.width; @pen.paint}
+        until(@pen.y == @bed.y+instruction.y)
+          @pen.y+=1
+          @pen.paint
+        end
+
+        x_target = @bed.x+instruction.x
+        until(@pen.x == x_target)
+          if x_target < @pen.x
+            @pen.x-=1
+            @pen.paint
+          elsif x_target > @pen.x
+            @pen.x+=1
+            @pen.paint
+          else
+            raise "This should be impossible."
+          end
         end
       else
         @pen.x = @bed.x+instruction.x

@@ -13,11 +13,7 @@ class Display < Gosu::Window
     @compile = Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
     Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50) {close}
 
-    @legal = Button.new(window: self, text: "Show Legal", x: @machine.bed.x, y: self.height-50) {toggle_legal}
-  end
-
-  def toggle_legal
-    @show_legal = @show_legal ? false : true
+    @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}
   end
 
   def render_legal
@@ -53,13 +49,16 @@ class Display < Gosu::Window
   end
 
   def button_up(id)
-    @legal.button_up(id) if @show_legal && id == Gosu::MsLeft
-    Button.list.each {|b| b.button_up(id)} if !@show_legal
+    _show_legal = @show_legal
+    Button.list.each {|b| b.button_up(id)} unless @show_legal
+    @legal.button_up(id) if (_show_legal == @show_legal) # Must be AFTER call to Button.list
+
     @machine.button_up(id)
 
     case id
     when Gosu::KbEscape
       @escape += 1
+      @show_legal = false
       close if @escape > 1
     else
       @escape = 0

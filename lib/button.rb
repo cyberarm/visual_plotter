@@ -46,7 +46,6 @@ class Button
     case id
     when Gosu::MsLeft
       if @enabled && mouse_over?
-        puts "Button> #{@text.text} id: #{id}"
         @block.call if @block
       end
     end

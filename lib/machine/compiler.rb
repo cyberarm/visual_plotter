@@ -2,6 +2,28 @@ class Machine
   class Compiler
     Event = Struct.new(:type, :x, :y)
 
+    def self.decompile(filename)
+      instructions = []
+      File.open(filename, "r") do |file|
+        file.each_line do |line|
+          line = line.strip
+          list = line.split(" ")
+          case list.first.downcase
+          when "home"
+            instructions << Event.new("home")
+          when "pen_up"
+            instructions << Event.new("pen_up")
+          when "pen_down"
+            instructions << Event.new("pen_down")
+          when "move"
+            coord = list.last.split(":")
+            instructions << Event.new("move", Integer(coord.first), Integer(coord.last))
+          end
+        end
+      end
+      return instructions
+    end
+
     attr_reader :events, :pen_down, :machine
     def initialize(machine:)
       @machine = machine

@@ -23,6 +23,7 @@ class Machine
     @plotter_run = false
     @plotter_forward = true
     @plotter_steps = @bed.width
+    @rcode_events = nil
 
     @status_text = Text.new(text: "Status: Waiting for file...", x: @bed.x, y: 30, size: 24)
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
@@ -73,6 +74,8 @@ class Machine
       @plotter_steps.times { run_plotter if @chunky_image }
       # @chunky_image.width.times { run_plotter if @chunky_image }
       @canvas.refresh
+    elsif @rcode_events.is_a?(Array) && @plotter_run
+      rcode_plot
     end
   end
 
@@ -142,6 +145,31 @@ class Machine
     @plotter_run = true
   end
 
+  def plot_from_rcode(file)
+    @rcode_events = Compiler.decompile(file)
+    replot
+    status(:okay, "Plotting from #{file.gsub("\\", "/").split("/").last}...")
+  end
+
+  def rcode_plot
+    instruction = @rcode_events.shift
+    case instruction.type.downcase
+    when "home"
+      @pen.x = @bed.x
+      @pen.y = @bed.y
+    when "pen_up"
+      @pen.plot = false
+    when "pen_down"
+      @pen.plot = false
+    when "move"
+      if @pen.plot
+      else
+        @pen.x = @bed.x+instruction.x
+        @pen.y = @bed.y+instruction.y
+      end
+    end
+  end
+
   # invert plotter color choices
   def invert_plotter
     @invert_plotter = !@invert_plotter
@@ -186,6 +214,12 @@ class Machine
     ext = name.split(".").last
     if ext.is_a?(Array)
       status(:error, "File #{name} is of an unknown type (.#{ext}), only the common types are supported.")
+      return
+    end
+
+    if ext.downcase == "rcode"
+      status(:okay, "Parsing #{name}...")
+      plot_from_rcode(file)
       return
     end
 

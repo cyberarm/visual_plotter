@@ -14,7 +14,7 @@ class Machine
 
     @bed = Bed.new(width: width, height: height)
     @pen = Pen.new(machine: self, x: @bed.x, y: @bed.y)
-    @compiler = Compiler.new
+    @compiler = Compiler.new(machine: self)
     @pen.plot = false
     new_canvas
     @bed_padding = 100
@@ -88,9 +88,8 @@ class Machine
 
     if @compiler.events.size == 0
       @compiler.add_event(type: "pen_up")
-      @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
+      @compiler.add_event(type: "home")
     else
-      @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
 
       if @pen.plot
         @compiler.add_event(type: "pen_down")
@@ -103,6 +102,7 @@ class Machine
       if (@pen.x-@bed.x)+1 < @chunky_image.width
         @pen.x+=1
       else
+        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y) if @pen.plot
         @plotter_forward = false
       end
     else
@@ -111,6 +111,7 @@ class Machine
       else
         @plotter_forward = true
         @pen.x = @bed.x
+        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y) if @pen.plot
         @pen.y+=1
       end
     end

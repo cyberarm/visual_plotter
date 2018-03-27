@@ -24,6 +24,7 @@ class Machine
     @plotter_forward = true
     @plotter_steps = @bed.width
     @rcode_events = nil
+    @rcode_index  = 0
 
     @status_text = Text.new(text: "Status: Waiting for file...", x: @bed.x, y: 30, size: 24)
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
@@ -66,7 +67,7 @@ class Machine
     @y_pos.text = "Y: #{(@pen.y-@bed.y).round(2)}"
     @pen_mode.text = "Plot: #{@pen.plot}"
     @fps.text = "FPS: #{Gosu.fps}"
-    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}, forward: #{@plotter_forward}, steps: #{@plotter_steps}"
+    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}, forward: #{@plotter_forward}, steps: #{@plotter_steps} #{@rcode_events ? rcode_stats: ''}"
 
     @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
 
@@ -75,7 +76,8 @@ class Machine
       # @chunky_image.width.times { run_plotter if @chunky_image }
       @canvas.refresh
     elsif @rcode_events.is_a?(Array) && @plotter_run
-      rcode_plot
+      @plotter_steps.times { rcode_plot }
+      @canvas.refresh
     end
   end
 
@@ -143,6 +145,7 @@ class Machine
     @pen.x = @bed.x
     @pen.y = @bed.y
     @plotter_run = true
+    @rcode_index = 0
   end
 
   def plot_from_rcode(file)
@@ -151,8 +154,18 @@ class Machine
     status(:okay, "Plotting from #{file.gsub("\\", "/").split("/").last}...")
   end
 
+  def rcode_stats
+    ", rcode events: #{@rcode_index}/#{@rcode_events.size-1}"
+  end
+
   def rcode_plot
-    instruction = @rcode_events.shift
+    instruction = @rcode_events[@rcode_index]
+    @rcode_index+=1 if @rcode_index < @rcode_events.size
+    if @rcode_index >= @rcode_events.size-1
+      @plotter_run = false
+      status(:okay, "Plotting from rcode complete.")
+      return
+    end
     case instruction.type.downcase
     when "home"
       @pen.x = @bed.x
@@ -160,9 +173,15 @@ class Machine
     when "pen_up"
       @pen.plot = false
     when "pen_down"
-      @pen.plot = false
+      @pen.plot = true
     when "move"
       if @pen.plot
+        @pen.y = @bed.y+instruction.y # bad idea, fixme?
+        if @bed.x+instruction.x < @pen.x
+          @pen.x-(@bed.x+instruction.x).times {@pen.x-=1 if @pen.x-1 > @bed.x; @pen.paint}
+        else
+          @pen.x-(@bed.x+instruction.x).times {@pen.x+=1 if @pen.x+1 < @bed.x+@bed.width; @pen.paint}
+        end
       else
         @pen.x = @bed.x+instruction.x
         @pen.y = @bed.y+instruction.y
@@ -218,6 +237,14 @@ class Machine
     end
 
     if ext.downcase == "rcode"
+      @chunky_image = nil
+      @target_image = nil
+      @canvas.clear
+      @canvas = nil
+
+      @rcode_events = nil
+      @rcode_index = 0
+      new_canvas
       status(:okay, "Parsing #{name}...")
       plot_from_rcode(file)
       return

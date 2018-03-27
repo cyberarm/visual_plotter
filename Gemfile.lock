@@ -1,8 +1,23 @@
+GIT
+  remote: https://github.com/gosu/releasy
+  revision: 794dbbf920758f1e11c7fe35d04b4d676051c7e4
+  specs:
+    releasy (0.2.3)
+      bundler (>= 1.2.1)
+      cri (~> 2.1.0)
+      ocra (~> 1.3.0)
+      rake (>= 0.9.2.2)
+      thor (~> 0.14.6)
+
 GEM
   remote: https://rubygems.org/
   specs:
     chunky_png (1.3.10)
+    cri (2.1.0)
     gosu (0.13.3-x86-mingw32)
+    ocra (1.3.10)
+    rake (12.3.1)
+    thor (0.14.6)
 
 PLATFORMS
   x86-mingw32
@@ -10,6 +25,7 @@ PLATFORMS
 DEPENDENCIES
   chunky_png
   gosu (>= 0.13.1)
+  releasy!
 
 BUNDLED WITH
    1.15.4

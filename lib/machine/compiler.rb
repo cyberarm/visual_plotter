@@ -59,7 +59,7 @@ class Machine
       @machine.pen.y-@machine.bed.y
     end
 
-    def compile(name = "compile")
+    def compile(name = "data/compile")
       File.open("#{name}.rcode", "w") do |file|
         file.write "# Compiled at: #{Time.now.iso8601}\n"
         file.write "# Compiled with: inverted #{@machine.invert_plotter}, threshold #{@machine.plotter_threshold}\n"

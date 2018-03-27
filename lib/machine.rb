@@ -169,8 +169,8 @@ class Machine
     end
   end
 
-  def save(name = "complete.png")
-    @canvas.save("complete.png") if !@plotter_run
+  def save(name = "data/complete.png")
+    @canvas.save(name) if !@plotter_run
     status(:okay, "Saved canvas.") if !@plotter_run
   end
 
@@ -201,7 +201,7 @@ class Machine
       status(:okay, "Plotted rcode.")
       return
     end
-    status(:okay, "Plotting from #{get_filename(@rcode_file)}...")
+    status(:busy, "Plotting from #{get_filename(@rcode_file)}...")
     case instruction.type.downcase
     when "home"
       @pen.x = @bed.x

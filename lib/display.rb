@@ -11,7 +11,7 @@ class Display < Gosu::Window
     @plot = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.replot}
     @save = Button.new(window: self, text: "Save", x: 200, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.save}
     @compile = Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
-    Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50) {close}
+    Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50, background: Gosu::Color.rgb(128, 64, 0)) {close}
 
     @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}
   end
@@ -25,6 +25,7 @@ class Display < Gosu::Window
   end
 
   def draw
+    draw_rect(0, 0, self.width, self.height, Gosu::Color.rgb(15,15,15), -1)
     @machine.draw
 
     @legal.draw if @show_legal

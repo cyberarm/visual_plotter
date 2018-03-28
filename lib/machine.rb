@@ -62,9 +62,9 @@ class Machine
 
   def draw_rails
     # X Axis
-    Gosu.draw_rect(@pen.x-1, @bed.y, 3, @bed.height, Gosu::Color::CYAN, 100)
+    Gosu.draw_rect(@bed.x, @pen.y-1, @bed.width, 3, Gosu::Color.rgba(200, 0, 0, 200), 100)
     # Y Axis
-    Gosu.draw_rect(@bed.x, @pen.y-1, @bed.width, 3, Gosu::Color::CYAN, 100)
+    Gosu.draw_rect(@pen.x-1, @bed.y, 3, @bed.height, Gosu::Color.rgba(0, 200, 0, 200), 100)
   end
 
   def update
@@ -78,7 +78,6 @@ class Machine
 
     if @chunky_image && @plotter_run
       @plotter_steps.times { run_plotter if @plotter_run }
-      # @chunky_image.width.times { run_plotter if @chunky_image }
       @canvas.refresh
     elsif @rcode_events.is_a?(Array) && @plotter_run
       @plotter_steps.times { rcode_plot if @plotter_run }
@@ -118,22 +117,21 @@ class Machine
   def plot
     status(:busy, "Plotting...")
     color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
-    if @invert_plotter
-      @pen.plot = (color > @plotter_threshold) ? true : false
-    else
-      @pen.plot = (color < @plotter_threshold) ? true : false
-    end
-    @pen.update
 
     if @compiler.events.size == 0
       @compiler.add_event(type: "pen_up")
       @compiler.add_event(type: "home")
     else
+      if @invert_plotter
+        @pen.plot = (color > @plotter_threshold) ? true : false
+      else
+        @pen.plot = (color < @plotter_threshold) ? true : false
+      end
 
       if @pen.plot
-        @compiler.add_event(type: "pen_down")
+        @compiler.add_event(type: "pen_down", x: @pen.x, y: @pen.y)
       else
-        @compiler.add_event(type: "pen_up")
+        @compiler.add_event(type: "pen_up", x: @pen.x, y: @pen.y)
       end
     end
 
@@ -141,29 +139,34 @@ class Machine
       if (@pen.x-@bed.x)+1 < @chunky_image.width
         @pen.x+=1
       else
-        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y) if @pen.plot
         @plotter_forward = false
+        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
+        @pen.y+=1
+        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
       end
     else
-      if (@pen.x-@bed.x)-1 > 0
+      if (@pen.x-@bed.x) > 0
         @pen.x-=1
       else
         @plotter_forward = true
         @pen.x = @bed.x
-        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y) if @pen.plot
+
+        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
         @pen.y+=1
+        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
       end
     end
+
+    @pen.update
   end
 
   def run_plotter
-    if @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) &&
-      (@pen.x-@bed.x < @chunky_image.width && @pen.x-@bed.x < @bed.width)
-      plot
-
-    elsif @pen.y-@bed.y > @chunky_image.height-1
+    if @pen.y-@bed.y >= @chunky_image.height-1
       @plotter_run = false
       status(:okay, "Plotting complete.")
+    elsif @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) &&
+      (@pen.x-@bed.x < @chunky_image.width && @pen.x-@bed.x < @bed.width)
+      plot
     else
       @pen.y+=1
     end

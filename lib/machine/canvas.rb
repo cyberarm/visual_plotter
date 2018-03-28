@@ -5,7 +5,7 @@ class Machine
       @x,@y = x,y
       @width,@height = width,height
 
-      @chunky_image = ChunkyPNG::Image.new(width, height, ChunkyPNG::Color::TRANSPARENT)
+      @chunky_image = ChunkyPNG::Image.new(width, height, ChunkyPNG::Color::WHITE)
       @image = nil
       puts "IMAGE> #{@chunky_image.width}x#{@chunky_image.height}"
       refresh

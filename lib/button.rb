@@ -6,7 +6,7 @@ class Button
   end
 
   attr_accessor :enabled
-  def initialize(window:, text: "Button", x:, y:, color: Gosu::Color::WHITE, background: Gosu::Color.rgb(25,0,100), enabled: true, &block)
+  def initialize(window:, text: "Button", x:, y:, color: Gosu::Color::WHITE, background: Gosu::Color.rgb(50,50,150), enabled: true, &block)
     @window = window
     @text = Text.new(text: text, x: x+PADDING, y:  y, z: 2, color: color, size: 32)
     @x,@y = x+PADDING,y

@@ -21,9 +21,9 @@ class Display < Gosu::Window
     if RUBY_PLATFORM =~ /mingw|cygwin|mswin/
       system("explorer \"#{Dir.pwd.gsub("/", "\\")}\\data\"")
     elsif RUBY_PLATFORM =~ /darwin/
-      system("open #{Dir.pwd}/data")
+      system("open \"#{Dir.pwd}/data\"")
     elsif RUBY_PLATFORM =~ /linux/
-      system("xdg-open #{Dir.pwd}/data")
+      system("xdg-open \"#{Dir.pwd}/data\"")
     else
       puts "unsupported platform."
     end

@@ -1,6 +1,6 @@
 require_relative "machine/pen"
 require_relative "machine/bed"
-require_relative "machine/canvas "
+require_relative "machine/canvas"
 require_relative "machine/image_processor"
 require_relative "machine/compiler"
 

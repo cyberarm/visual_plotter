@@ -9,9 +9,9 @@ class Display < Gosu::Window
 
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
     @plot = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.replot}
-    @save = Button.new(window: self, text: "Save", x: 200, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.save}
-    @compile = Button.new(window: self, text: "Compile", x: 300, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
-    Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50, background: Gosu::Color.rgb(128, 64, 0)) {close}
+    @save = Button.new(window: self, text: "Save Image", x: 180, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.save}
+    @compile = Button.new(window: self, text: "Compile", x: 360, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
+    Button.new(window: self, text: "Close", x: 500, y: @machine.bed.y+@machine.bed.height+50, background: Gosu::Color.rgb(128, 64, 0)) {close}
 
     @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}
     Button.new(window: self, text: "Open Data Folder", x: @machine.bed.x+100, y: self.height-50) {open_data_folder}

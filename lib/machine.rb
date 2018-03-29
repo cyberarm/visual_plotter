@@ -72,7 +72,7 @@ class Machine
     @y_pos.text = "Y: #{(pen_y).round(2)}"
     @pen_mode.text = "Plot: #{@pen.plot}"
     @fps.text = "FPS: #{Gosu.fps}"
-    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}, forward: #{@plotter_forward}, steps: #{@plotter_steps} #{@rcode_events ? rcode_stats: ''}"
+    @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}, forward: #{@plotter_forward}, steps: #{@plotter_steps} #{!@rcode_events ? compiler_stats : ''} #{@rcode_events ? rcode_stats : ''}"
 
     @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
 
@@ -172,6 +172,10 @@ class Machine
     end
   end
 
+  def compiler_stats
+    ", compiler events: #{@compiler.events.size}"
+  end
+
   def save(name = "complete-#{Time.now.strftime('%Y-%m-%d-%s')}")
     @canvas.save("data/#{name}.png") if !@plotter_run
     status(:okay, "Saved canvas.") if !@plotter_run
@@ -193,13 +197,13 @@ class Machine
   end
 
   def rcode_stats
-    ", rcode events: #{@rcode_index}/#{@rcode_events.size-1}"
+    ", rcode events: #{@rcode_index}/#{@rcode_events.size}"
   end
 
   def rcode_plot
     instruction = @rcode_events[@rcode_index]
-    @rcode_index+=1 if @rcode_index < @rcode_events.size-1
-    if @rcode_index >= @rcode_events.size-1
+    @rcode_index+=1
+    if @rcode_index >= @rcode_events.size
       @plotter_run = false
       status(:okay, "Plotted rcode.")
       return
@@ -215,10 +219,15 @@ class Machine
       @pen.plot = true
     when "move"
       if @pen.plot
-        until(@pen.y == @bed.y+instruction.y)
+        y_target = @bed.y+instruction.y
+        until(@pen.y == y_target)
           break unless @plotter_run
 
-          @pen.y+=1
+          if y_target > @pen.y
+            @pen.y+=1
+          else
+            @pen.y-=1
+          end
           @pen.paint
         end
 

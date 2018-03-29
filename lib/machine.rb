@@ -172,8 +172,8 @@ class Machine
     end
   end
 
-  def save(name = "data/complete.png")
-    @canvas.save(name) if !@plotter_run
+  def save(name = "complete-#{Time.now.strftime('%Y-%m-%d-%s')}")
+    @canvas.save("data/#{name}.png") if !@plotter_run
     status(:okay, "Saved canvas.") if !@plotter_run
   end
 

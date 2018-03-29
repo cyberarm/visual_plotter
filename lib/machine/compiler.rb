@@ -86,8 +86,8 @@ class Machine
       @events << event
     end
 
-    def compile(name = "data/compile")
-      File.open("#{name}.rcode", "w") do |file|
+    def compile(name = "compile-#{Time.now.strftime('%Y-%m-%d-%s')}")
+      File.open("data/#{name}.rcode", "w") do |file|
         file.write "# Compiled at: #{Time.now.iso8601}\n"
         file.write "# Compiled with: inverted #{@machine.invert_plotter}, threshold #{@machine.plotter_threshold}\n"
         @events.each do |event|

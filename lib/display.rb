@@ -14,6 +14,19 @@ class Display < Gosu::Window
     Button.new(window: self, text: "Close", x: 450, y: @machine.bed.y+@machine.bed.height+50, background: Gosu::Color.rgb(128, 64, 0)) {close}
 
     @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}
+    Button.new(window: self, text: "Open Data Folder", x: @machine.bed.x+100, y: self.height-50) {open_data_folder}
+  end
+
+  def open_data_folder
+    if RUBY_PLATFORM =~ /mingw|cygwin|mswin/
+      system("explorer \"#{Dir.pwd.gsub("/", "\\")}\\data\"")
+    elsif RUBY_PLATFORM =~ /darwin/
+      system("open #{Dir.pwd}/data")
+    elsif RUBY_PLATFORM =~ /linux/
+      system("xdg-open #{Dir.pwd}/data")
+    else
+      puts "unsupported platform."
+    end
   end
 
   def render_legal

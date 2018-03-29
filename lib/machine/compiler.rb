@@ -66,7 +66,11 @@ class Machine
         if @machine.pen.x+1 >= @machine.bed.x+@machine.bed.width
           event = Event.new("move", pen_x, pen_y)
         else
-          event = Event.new("move", pen_x-1, pen_y)
+          if @machine.pen.x-1 <= @machine.bed.x
+            event = Event.new("move", pen_x, pen_y)
+          else
+            event = Event.new("move", pen_x-1, pen_y)
+          end
         end
       else
         if @machine.pen.x-1 <= @machine.bed.x

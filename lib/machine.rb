@@ -68,8 +68,8 @@ class Machine
   end
 
   def update
-    @x_pos.text = "X: #{(@pen.x-@bed.x).round(2)}"
-    @y_pos.text = "Y: #{(@pen.y-@bed.y).round(2)}"
+    @x_pos.text = "X: #{(pen_x).round(2)}"
+    @y_pos.text = "Y: #{(pen_y).round(2)}"
     @pen_mode.text = "Plot: #{@pen.plot}"
     @fps.text = "FPS: #{Gosu.fps}"
     @plotter_state.text = "Plotter inverted: #{@invert_plotter}, threshold: #{@plotter_threshold}, run: #{@plotter_run}, forward: #{@plotter_forward}, steps: #{@plotter_steps} #{@rcode_events ? rcode_stats: ''}"
@@ -116,56 +116,56 @@ class Machine
 
   def plot
     status(:busy, "Plotting...")
-    color = ChunkyPNG::Color.r(@chunky_image[@pen.x-@bed.x, @pen.y-@bed.y])
+    color = ChunkyPNG::Color.r(@chunky_image[pen_x, pen_y])
 
     if @compiler.events.size == 0
       @compiler.add_event(type: "pen_up")
       @compiler.add_event(type: "home")
     else
       if @invert_plotter
-        @pen.plot = (color > @plotter_threshold) ? true : false
+        @pen.plot = (color >= @plotter_threshold) ? true : false
       else
-        @pen.plot = (color < @plotter_threshold) ? true : false
+        @pen.plot = (color <= @plotter_threshold) ? true : false
       end
 
       if @pen.plot
-        @compiler.add_event(type: "pen_down", x: @pen.x, y: @pen.y)
+        @compiler.add_event(type: "pen_down")
       else
-        @compiler.add_event(type: "pen_up", x: @pen.x, y: @pen.y)
-      end
-    end
-
-    if @plotter_forward
-      if (@pen.x-@bed.x)+1 < @chunky_image.width
-        @pen.x+=1
-      else
-        @plotter_forward = false
-        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
-        @pen.y+=1
-        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
-      end
-    else
-      if (@pen.x-@bed.x) > 0
-        @pen.x-=1
-      else
-        @plotter_forward = true
-        @pen.x = @bed.x
-
-        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
-        @pen.y+=1
-        @compiler.add_event(type: "move", x: @pen.x-@bed.x, y: @pen.y-@bed.y)
+        @compiler.add_event(type: "pen_up")
       end
     end
 
     @pen.update
+    # NO PLOTTING OR EVENTS AFTER THIS LINE
+
+    if @plotter_forward
+      if (pen_x)+1 < @chunky_image.width
+        @pen.x+=1
+      else
+        @plotter_forward = false
+        @compiler.add_event(type: "move", x: pen_x-1, y: pen_y) if @pen.plot
+        @pen.y+=1
+        @compiler.add_event(type: "move", x: pen_x-1, y: pen_y) if @pen.plot
+      end
+    else
+      if (pen_x)-1 > 0
+        @pen.x-=1
+      else
+        @plotter_forward = true
+        @pen.x = @bed.x
+        @compiler.add_event(type: "move", x: pen_x+1, y: pen_y) if @pen.plot
+        @pen.y+=1
+        @compiler.add_event(type: "move", x: pen_x+1, y: pen_y) if @pen.plot
+      end
+    end
   end
 
   def run_plotter
-    if @pen.y-@bed.y >= @chunky_image.height-1
+    if  pen_y >= @chunky_image.height-1
       @plotter_run = false
       status(:okay, "Plotting complete.")
-    elsif @chunky_image.get_pixel(@pen.x-@bed.x, @pen.y-@bed.y) &&
-      (@pen.x-@bed.x < @chunky_image.width && @pen.x-@bed.x < @bed.width)
+    elsif @chunky_image.get_pixel(pen_x, pen_y) &&
+      (pen_x < @chunky_image.width && pen_x < @bed.width)
       plot
     else
       @pen.y+=1
@@ -270,6 +270,14 @@ class Machine
       @status_text.color = Gosu::Color::RED
     end
     @status_text.text = "Status: #{string}"
+  end
+
+  def pen_x
+    @pen.x-@bed.x
+  end
+
+  def pen_y
+    @pen.y-@bed.y
   end
 
   def new_canvas

@@ -43,9 +43,10 @@ class Machine
           @pen.x+=1
         else
           @forward = false
-          @compiler.add_event(type: "move", x: pen_x-1, y: pen_y) if @pen.plot
+          # -
+          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
           @pen.y+=1
-          @compiler.add_event(type: "move", x: pen_x-1, y: pen_y) if @pen.plot
+          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
         end
       else
         if (pen_x)-1 > 0
@@ -53,9 +54,10 @@ class Machine
         else
           @forward = true
           @pen.x = @bed.x
-          @compiler.add_event(type: "move", x: pen_x+1, y: pen_y) if @pen.plot
+          # +
+          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
           @pen.y+=1
-          @compiler.add_event(type: "move", x: pen_x+1, y: pen_y) if @pen.plot
+          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
         end
       end
     end

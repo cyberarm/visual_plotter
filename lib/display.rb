@@ -1,6 +1,6 @@
 class Display < Gosu::Window
   def initialize
-    super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, false)
+    super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, false, 50.0)
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
     @show_legal  = false
     @legal_text = Gosu::LICENSES.split("\n")
@@ -10,7 +10,7 @@ class Display < Gosu::Window
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
     @plot = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.replot}
     @save = Button.new(window: self, text: "Save Image", x: 180, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.save}
-    @compile = Button.new(window: self, text: "Compile", x: 360, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compiler.compile; @machine.status(:okay, "Compiled plotter instructions.")}
+    @compile = Button.new(window: self, text: "Compile", x: 360, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compile}
     Button.new(window: self, text: "Close", x: 500, y: @machine.bed.y+@machine.bed.height+50, background: Gosu::Color.rgb(128, 64, 0)) {close}
 
     @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}
@@ -52,8 +52,8 @@ class Display < Gosu::Window
     unless @show_legal
       @machine.update
       @plot.enabled = (@machine.chunky_image || @machine.rcode_events) ? true : false
-      @save.enabled = (@machine.chunky_image || @machine.rcode_events) ? true : false
-      @compile.enabled = ((@machine.pen.x != @machine.bed.x || @machine.pen.y != @machine.bed.y) && !@machine.plotter_run && !@machine.rcode_events) ? true : false
+      @save.enabled = (@machine.chunky_image || @machine.rcode_events) && !@machine.plotter.run ? true : false
+      @compile.enabled = ((@machine.pen.x != @machine.bed.x || @machine.pen.y != @machine.bed.y) && !@machine.plotter.run && !@machine.rcode_events) ? true : false
       Button.list.each(&:update)
     end
   end

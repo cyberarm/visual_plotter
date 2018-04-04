@@ -62,7 +62,7 @@ class Machine
     # Fix unwanted displacements
     def add_adjusted_move
       event = nil
-      if @machine.plotter_forward
+      if @machine.plotter.forward
         if @machine.pen.x+1 >= @machine.bed.x+@machine.bed.width
           event = Event.new("move", pen_x, pen_y)
         else
@@ -89,7 +89,7 @@ class Machine
     def compile(name = "compile-#{Time.now.strftime('%Y-%m-%d-%s')}")
       File.open("data/#{name}.rcode", "w") do |file|
         file.write "# Compiled at: #{Time.now.iso8601}\n"
-        file.write "# Compiled with: inverted #{@machine.invert_plotter}, threshold #{@machine.plotter_threshold}\n"
+        file.write "# Compiled with: inverted #{@machine.plotter.invert}, threshold #{@machine.plotter.threshold}\n"
         @events.each do |event|
           if event.x
             file.write "#{event.type} #{event.x}:#{event.y}\n"

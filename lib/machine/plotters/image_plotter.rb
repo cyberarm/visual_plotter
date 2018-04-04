@@ -18,23 +18,12 @@ class Machine
       @machine.status(:busy, "Plotting...")
       color = ChunkyPNG::Color.r(@machine.chunky_image[pen_x, pen_y])
   
-      if @compiler.events.size == 0
-        @compiler.add_event(type: "pen_up")
-        @compiler.add_event(type: "home")
+      if @invert
+        @pen.plot = (color >= @threshold) ? true : false
       else
-        if @invert
-          @pen.plot = (color >= @threshold) ? true : false
-        else
-          @pen.plot = (color <= @threshold) ? true : false
-        end
-  
-        if @pen.plot
-          @compiler.add_event(type: "pen_down")
-        else
-          @compiler.add_event(type: "pen_up")
-        end
+        @pen.plot = (color <= @threshold) ? true : false
       end
-  
+
       @pen.update
       # NO PLOTTING OR EVENTS AFTER THIS LINE
   
@@ -43,10 +32,7 @@ class Machine
           @pen.x+=1
         else
           @forward = false
-          # -
-          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
           @pen.y+=1
-          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
         end
       else
         if (pen_x)-1 > 0
@@ -54,10 +40,7 @@ class Machine
         else
           @forward = true
           @pen.x = @bed.x
-          # +
-          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
           @pen.y+=1
-          @compiler.add_event(type: "move", x: pen_x, y: pen_y) if @pen.plot
         end
       end
     end

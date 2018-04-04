@@ -1,5 +1,7 @@
 class Machine
   class Plotter
+    Point = Struct.new(:x, :y)
+
     attr_accessor :invert, :threshold, :run, :forward, :steps
     def initialize(machine:)
       @machine = machine

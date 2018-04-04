@@ -14,6 +14,23 @@ class Machine
     end
   
     def plot
+      if @move_target
+        if (pen_x != @move_target.x || pen_y != @move_target.y)
+          unless pen_y == @move_target.y
+            @pen.y-=1 if @move_target.y < pen_y
+            @pen.y+=1 if @move_target.y > pen_y
+          else
+            @pen.x-=1 if @move_target.x < pen_x
+            @pen.x+=1 if @move_target.x > pen_x
+          end
+
+          @pen.paint if @pen.plot
+          return
+        else
+          @move_target = nil
+        end
+      end
+
       instruction = @rcode_events[@rcode_index]
       @rcode_index+=1
       if @rcode_index >= @rcode_events.size
@@ -31,37 +48,7 @@ class Machine
       when "pen_down"
         @pen.plot = true
       when "move"
-        if @pen.plot
-          y_target = @bed.y+instruction.y
-          until(@pen.y == y_target)
-            break unless @run
-  
-            if y_target > @pen.y
-              @pen.y+=1
-            else
-              @pen.y-=1
-            end
-            @pen.paint
-          end
-  
-          x_target = @bed.x+instruction.x
-          until(@pen.x == x_target)
-            break unless @run
-  
-            if x_target < @pen.x
-              @pen.x-=1
-              @pen.paint
-            elsif x_target > @pen.x
-              @pen.x+=1
-              @pen.paint
-            else
-              raise "This should be impossible."
-            end
-          end
-        else
-          @pen.x = @bed.x+instruction.x
-          @pen.y = @bed.y+instruction.y
-        end
+        @move_target = Point.new(instruction.x, instruction.y)
       end
     end
   end

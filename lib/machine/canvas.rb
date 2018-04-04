@@ -37,6 +37,10 @@ class Machine
       @image = nil
     end
 
+    def image
+      @chunky_image
+    end
+
     def refresh
       @image = Gosu::Image.new(Magick::Image.new(@chunky_image))
     end

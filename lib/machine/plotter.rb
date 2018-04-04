@@ -36,7 +36,7 @@ class Machine
     end
 
     def steps=int
-      int = int.clamp(1, @bed.width)
+      int = int.clamp(1, (@bed.width*@bed.height).to_i)
       @steps = int
     end
 

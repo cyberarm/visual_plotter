@@ -6,14 +6,14 @@ require_relative "machine/plotter"
 require_relative "machine/plotters/image_plotter"
 require_relative "machine/plotters/rcode_plotter"
 require_relative "machine/compiler"
+require_relative "machine/compiler/processor"
+require_relative "machine/compiler/solvers/classic"
+require_relative "machine/compiler/solvers/graph_search"
 
 class Machine
-  attr_reader :pen, :bed, :compiler, :canvas, :thread_safe_queue
-  attr_reader :plotter_threshold, :invert_plotter, :plotter_forward, :plotter_steps
-
+  attr_reader :pen, :bed, :compiler, :plotter, :canvas, :thread_safe_queue
   attr_reader :rcode_events, :rcode_file, :chunky_image
 
-  attr_accessor :plotter_run
   def initialize(window:, width: 11*40, height: 8.5*40)
     @thread_safe_queue = []
     @window = window
@@ -30,7 +30,7 @@ class Machine
     @rcode_index  = 0
 
     @status_text = Text.new(text: "", x: @bed.x, y: 30, size: 24)
-    status(:okay, "Status: Waiting for file...")
+    status(:okay, "Status: Waiting for photo, drag 'n drop one on the window.")
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
     @y_pos = Text.new(text: "Y: ?", x: @bed.x+@bed.width+10, y: @bed.y+@bed.height/2)
     @pen_mode = Text.new(text: "Plot: false", x: @bed.x+@bed.width/2, y: @bed.y+@bed.height+10)
@@ -95,7 +95,7 @@ class Machine
     when Gosu::KbF5
       replot
     when Gosu::KbHome
-      if @window.button_down?(Gosu::KbLeftControl || Gosu::KbRightControl)
+      if @window.button_down?(Gosu::KbLeftControl) || @window.button_down?(Gosu::KbRightControl)
         @plotter.steps = (@bed.width*@bed.height).to_i
       else
         @plotter.steps = @bed.width
@@ -110,6 +110,15 @@ class Machine
       @plotter.threshold+=1
     when Gosu::MsWheelDown
       @plotter.threshold-=1
+    end
+  end
+
+  def compile
+    status(:busy, "Compiling... Please wait...")
+    Thread.new do
+      Compiler::Processor.new(compiler: @compiler, canvas: @canvas)
+      @compiler.compile
+      status(:okay, "Compiled.")
     end
   end
 

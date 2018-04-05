@@ -19,16 +19,22 @@ class Machine
           end
 
           @canvas.image.width.to_i.times do |x|
+            @forward = true  if y.even?
+            @forward = false if y.odd?
+
+            x = (@canvas.image.width.to_i-1)-x if !@forward
+
             if ChunkyPNG::Color.r(@canvas.image[x,y]) <= 0
               @last_x = x
               if !@pen_down
                 @pen_down = true
-                add_event( Event.new("move", x, y) )                
+                add_event( Event.new("move", x, y) )
                 add_event( Event.new("pen_down") )
               end
             else
               if @pen_down
-                add_event( Event.new("move", x, y) )
+                add_event( Event.new("move", x-1, y) ) if @forward
+                add_event( Event.new("move", x+1, y) ) if !@forward
                 add_event( Event.new("pen_up") )
                 @pen_down = false
               end

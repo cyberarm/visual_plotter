@@ -8,11 +8,11 @@ class Machine
       @rcode_index = 0
       @rcode_events = @machine.rcode_events
     end
-  
+
     def stats
       ", rcode events: #{@rcode_index}/#{@rcode_events.size}"
     end
-  
+
     def plot
       if @move_target
         if (pen_x != @move_target.x || pen_y != @move_target.y)
@@ -47,6 +47,7 @@ class Machine
         @pen.plot = false
       when "pen_down"
         @pen.plot = true
+        @pen.paint
       when "move"
         @move_target = Point.new(instruction.x, instruction.y)
       end

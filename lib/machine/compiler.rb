@@ -41,11 +41,11 @@ class Machine
       when "pen_up"
         return if @pen_down == false && @events.size != 0
         @pen_down = false
-        add_adjusted_move if @events.size != 0
+        add_event(type: "home", x: pen_x, y: pen_y) if @events.size != 0
       when "pen_down"
         return if @pen_down
         @pen_down = true
-        add_adjusted_move
+        add_event(type: "home", x: pen_x, y: pen_y)
       end
 
       @events << Event.new(type, x, y)
@@ -57,33 +57,6 @@ class Machine
 
     def pen_y
       @machine.pen.y-@machine.bed.y
-    end
-
-    # Fix unwanted displacements
-    def add_adjusted_move
-      event = nil
-      if @machine.plotter.forward
-        if @machine.pen.x+1 >= @machine.bed.x+@machine.bed.width
-          event = Event.new("move", pen_x, pen_y)
-        else
-          if @machine.pen.x-1 <= @machine.bed.x
-            event = Event.new("move", pen_x, pen_y)
-          else
-            event = Event.new("move", pen_x-1, pen_y)
-          end
-        end
-      else
-        if @machine.pen.x-1 <= @machine.bed.x
-          event = Event.new("move", pen_x, pen_y)
-        else
-          if @machine.pen.x+1 >= @machine.bed.x+@machine.bed.width
-            event = Event.new("move", pen_x, pen_y)
-          else
-            event = Event.new("move", pen_x+1, pen_y)
-          end
-        end
-      end
-      @events << event
     end
 
     def compile(name = "compile-#{Time.now.strftime('%Y-%m-%d-%s')}")

@@ -15,4 +15,4 @@ require_relative "lib/button"
 require_relative "lib/display"
 require_relative "lib/machine"
 
-Display.new.show
+Display.new.show unless defined?(Ocra)

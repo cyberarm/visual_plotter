@@ -30,7 +30,7 @@ class Machine
     @rcode_index  = 0
 
     @status_text = Text.new(text: "", x: @bed.x, y: 30, size: 24)
-    status(:okay, "Status: Waiting for photo, drag 'n drop one on the window.")
+    status(:okay, "Waiting for photo, drag 'n drop one on the window.")
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)
     @y_pos = Text.new(text: "Y: ?", x: @bed.x+@bed.width+10, y: @bed.y+@bed.height/2)
     @pen_mode = Text.new(text: "Plot: false", x: @bed.x+@bed.width/2, y: @bed.y+@bed.height+10)

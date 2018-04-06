@@ -6,7 +6,7 @@ class Machine
       @bed = machine.bed
       @file = file
 
-      @machine.status(:okay, "Loading image into data structure...")
+      @machine.status(:busy, "Loading image into data structure...")
       @machine.update
       begin
         # NOTE: Gosu::Image is NOT thread safe, they'll be blank if queried from a thread.
@@ -27,9 +27,9 @@ class Machine
     end
 
     def process_image
-      @machine.thread_safe_queue << proc {@machine.status(:okay, "Scaling image...")}
+      @machine.thread_safe_queue << proc {@machine.status(:busy, "Scaling image...")}
       scale_image
-      @machine.thread_safe_queue << proc {@machine.status(:okay, "Converting to grayscale...")}
+      @machine.thread_safe_queue << proc {@machine.status(:busy, "Converting to grayscale...")}
       @image.grayscale!
     end
 

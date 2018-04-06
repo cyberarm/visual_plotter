@@ -41,8 +41,7 @@ class Machine
       @machine.status(:busy, "Plotting from #{@machine.get_filename(@machine.rcode_file)}...")
       case instruction.type.downcase
       when "home"
-        @pen.x = @bed.x
-        @pen.y = @bed.y
+        @move_target = Point.new(@bed.x, @bed.y)
       when "pen_up"
         @pen.plot = false
       when "pen_down"

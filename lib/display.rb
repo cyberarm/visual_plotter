@@ -1,11 +1,12 @@
 class Display < Gosu::Window
   def initialize
-    super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, false, 50.0)
+    super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, fullscreen: false, resizable: true)
+
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
     @show_legal  = false
-    @legal_text = Gosu::LICENSES.split("\n")
-    @text = Text.new(size: 24)
-    @escape = 0
+    @legal_text  = Gosu::LICENSES.split("\n")
+    @text    = Text.new(size: 24)
+    @escaped = 0
 
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
     @plot = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.replot}
@@ -71,11 +72,11 @@ class Display < Gosu::Window
 
     case id
     when Gosu::KbEscape
-      @escape += 1
+      @escaped += 1
       @show_legal = false
-      close if @escape > 1
+      close if @escaped > 1
     else
-      @escape = 0
+      @escaped = 0
     end
   end
 

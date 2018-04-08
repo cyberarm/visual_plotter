@@ -6,24 +6,35 @@ class Machine
       @bed = machine.bed
       @file = file
 
-      @machine.status(:busy, "Loading image into data structure...")
-      @machine.update
+      @machine.thread_safe_queue << proc {@machine.status(:busy, "Loading image into data structure...")}
       begin
         # NOTE: Gosu::Image is NOT thread safe, they'll be blank if queried from a thread.
-        gosu_image = Gosu::Image.new(file)
-        @image = ChunkyPNG::Image.from_rgba_stream(gosu_image.width, gosu_image.height, gosu_image.to_blob)
-        gosu_image = nil
+        @machine.thread_safe_queue << proc {self.image_loaded(Gosu::Image.new(file)) }
+        @machine.thread_safe_queue << proc {self.image_rgba_stream}
 
         Thread.new do
+          until(@gosu_image && @image) do
+            sleep 0.1
+          end
+          @gosu_image = nil
+
           process_image
-          @machine.thread_safe_queue.clear
           @machine.thread_safe_queue << proc {@machine.image_ready(@image, @file)}
         end
       rescue NoMemoryError
         @machine.status(:error, "Ran out of them delicious bits. Try a smaller image.")
+        @gosu_image = nil
         @image = nil
         puts "Ran out of them delicious bits. :("
       end
+    end
+
+    def image_loaded(image)
+      @gosu_image = image
+    end
+
+    def image_rgba_stream
+      @image = ChunkyPNG::Image.from_rgba_stream(@gosu_image.width, @gosu_image.height, @gosu_image.to_blob)
     end
 
     def process_image

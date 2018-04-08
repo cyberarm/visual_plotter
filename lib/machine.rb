@@ -73,7 +73,7 @@ class Machine
     @fps.text = "FPS: #{Gosu.fps}"
     @plotter_state.text = "Plotter inverted: #{@plotter.invert}, threshold: #{@plotter.threshold}, run: #{@plotter.run}, forward: #{@plotter.forward}, steps: #{@plotter.steps} #{!@rcode_events ? compiler_stats : ''} #{@rcode_events ? @plotter.stats : ''}"
 
-    @thread_safe_queue.pop.call if @thread_safe_queue.size > 0
+    @thread_safe_queue.shift.call if @thread_safe_queue.size > 0
 
     if @chunky_image && @plotter.run
       @plotter.steps.times { @plotter.plot if @plotter.run }

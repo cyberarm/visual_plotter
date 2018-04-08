@@ -1,6 +1,6 @@
 class Display < Gosu::Window
   def initialize
-    super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, fullscreen: false, resizable: true)
+    super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, fullscreen: false, update_interval: 50.0, resizable: true)
 
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
     @show_legal  = false

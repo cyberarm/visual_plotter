@@ -14,7 +14,7 @@ class Machine
   attr_reader :pen, :bed, :compiler, :plotter, :canvas, :thread_safe_queue
   attr_reader :rcode_events, :rcode_file, :chunky_image
 
-  def initialize(window:, width: 11*40, height: 8.5*40)
+  def initialize(window:, width: 14*40, height: 8*40)
     @thread_safe_queue = []
     @window = window
     @width, @height = width, height

@@ -9,6 +9,7 @@ require_relative "machine/compiler"
 require_relative "machine/compiler/processor"
 require_relative "machine/compiler/solvers/classic"
 require_relative "machine/compiler/solvers/graph_search"
+require_relative "machine/compiler/solvers/generational"
 
 class Machine
   attr_reader :pen, :bed, :compiler, :plotter, :canvas, :thread_safe_queue
@@ -116,7 +117,7 @@ class Machine
   def compile
     status(:busy, "Compiling... Please wait...")
     Thread.new do
-      Compiler::Processor.new(compiler: @compiler, canvas: @canvas)
+      Compiler::Processor.new(compiler: @compiler, canvas: @canvas, mode: :generational)
       @compiler.compile
       status(:okay, "Compiled.")
     end

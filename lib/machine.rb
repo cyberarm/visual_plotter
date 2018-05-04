@@ -72,6 +72,7 @@ class Machine
     @y_pos.text = "Y: #{(@plotter.pen_y).round(2)}"
     @pen_mode.text = "Plot: #{@pen.plot}"
     @fps.text = "FPS: #{Gosu.fps}"
+    @fps.x = @window.width-75
     @plotter_state.text = "Plotter inverted: #{@plotter.invert}, threshold: #{@plotter.threshold}, run: #{@plotter.run}, forward: #{@plotter.forward}, steps: #{@plotter.steps} #{!@rcode_events ? compiler_stats : ''} #{@rcode_events ? @plotter.stats : ''}"
 
     @thread_safe_queue.shift.call if @thread_safe_queue.size > 0
@@ -117,7 +118,7 @@ class Machine
   def compile
     status(:busy, "Compiling... Please wait...")
     Thread.new do
-      Compiler::Processor.new(compiler: @compiler, canvas: @canvas, mode: :generational)
+      Compiler::Processor.new(compiler: @compiler, canvas: @canvas)#, mode: :generational)
       @compiler.compile
       status(:okay, "Compiled.")
     end

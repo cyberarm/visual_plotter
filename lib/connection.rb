@@ -29,7 +29,7 @@ class Connection
       rescue Errno::ECONNREFUSED => e
         @errored = true
         @connected = false
-        @machine.status(:error, "Failed to connect to plotter")
+        @machine.status(:error, "Failed to connect to plotter, connection refused [Errno::ECONNREFUSED]")
       rescue SocketError => e
         @connected = false
         @errored = true
@@ -72,14 +72,25 @@ class Connection
         @connected = false
         @errored = true
         @queue.insert(0, message)
+        @machine.status(:error, "Disconnected from plotter [IOError]")
 
-        reconnect
+      rescue Errno::ECONNRESET => e
+        @connected = false
+        @errored = true
+        @queue.insert(0, message)
+        @machine.status(:error, "Disconnected from plotter, connection reset [Errno::ECONNRESET]")
+
+      rescue Errno::EMFILE => e
+        @connected = false
+        @error = true
+        @queue.insert(0, message)
+        @machine.status(:error, "Unable to open socket, to many open files [Errno::EMFILE]")
+
       rescue Errno::EPIPE => e
         @connected = false
         @errored = true
         @queue.insert(0, message)
-
-        reconnect
+        @machine.status(:error, "Disconnected from plotter, broken pipe [Errno::EPIPE]")
       end
     end
   end

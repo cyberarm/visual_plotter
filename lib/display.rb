@@ -9,21 +9,22 @@ class Display < Gosu::Window
     @escaped = 0
 
     @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
+    @connection = nil
     @plot = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.replot}
     @save = Button.new(window: self, text: "Save Image", x: 180, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.save}
     @compile = Button.new(window: self, text: "Compile", x: 360, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.compile}
     Button.new(window: self, text: "Close", x: 500, y: @machine.bed.y+@machine.bed.height+50, background: Gosu::Color.rgb(128, 64, 0)) {close}
 
     if ARGV.join.include?("--network")
-      @connect = Button.new(window: self, text: "Connect to Plotter", x: 100, y: @machine.bed.y+@machine.bed.height+100) {network_buttons(true)}
-      @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.x = @machine.pen.x-1; @machine.pen.update}
-      @right_x = Button.new(window: self, text: "→", x: 380, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.x = @machine.pen.x+1; @machine.pen.update}
-      @up_y    = Button.new(window: self, text: "↑", x: 410, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.y = @machine.pen.y-1; @machine.pen.update}
-      @down_y  = Button.new(window: self, text: "↓", x: 440, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.y = @machine.pen.y+1; @machine.pen.update}
-      @home    = Button.new(window: self, text: "⌂", x: 470, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.x, @machine.pen.y = @machine.bed.x, @machine.bed.y}
-      @pen_down= Button.new(window: self, text: "∙", x: 500, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = true}
-      @pen_up  = Button.new(window: self, text: "°", x: 520, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = false}
-      @stop    = Button.new(window: self, text: "■", x: 545, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {}
+      @connect = Button.new(window: self, text: "Connect to Plotter", x: 100, y: @machine.bed.y+@machine.bed.height+100) {@connection ||= Connection.new(host: "localhost")}
+      @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.x = @machine.pen.x-1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
+      @right_x = Button.new(window: self, text: "→", x: 380, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.x = @machine.pen.x+1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
+      @up_y    = Button.new(window: self, text: "↑", x: 410, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.y = @machine.pen.y-1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
+      @down_y  = Button.new(window: self, text: "↓", x: 440, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.y = @machine.pen.y+1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
+      @home    = Button.new(window: self, text: "⌂", x: 470, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.x, @machine.pen.y = @machine.bed.x, @machine.bed.y; @connection.request("home")}
+      @pen_down= Button.new(window: self, text: "∙", x: 500, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = true; @connection.request("pen_down")}
+      @pen_up  = Button.new(window: self, text: "°", x: 520, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = false; @connection.request("pen_up")}
+      @stop    = Button.new(window: self, text: "■", x: 545, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@connection.request("stop")}
     end
 
     @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}
@@ -68,6 +69,10 @@ class Display < Gosu::Window
   def update
     @legal.update if @show_legal
     unless @show_legal
+      network_buttons(@connection.connected?) if @connection
+      if @connection && @connection.connected?
+        # @connection.request("status")
+      end
       @machine.update
       @plot.enabled = (@machine.chunky_image || @machine.rcode_events) ? true : false
       @save.enabled = (@machine.chunky_image || @machine.rcode_events) && !@machine.plotter.run ? true : false

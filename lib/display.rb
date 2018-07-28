@@ -16,15 +16,21 @@ class Display < Gosu::Window
     Button.new(window: self, text: "Close", x: 500, y: @machine.bed.y+@machine.bed.height+50, background: Gosu::Color.rgb(128, 64, 0)) {close}
 
     if ARGV.join.include?("--network")
-      @connect = Button.new(window: self, text: "Connect to Plotter", x: 100, y: @machine.bed.y+@machine.bed.height+100) {@connection ||= Connection.new(host: "localhost")}
-      @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.x = @machine.pen.x-1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
-      @right_x = Button.new(window: self, text: "→", x: 380, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.x = @machine.pen.x+1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
-      @up_y    = Button.new(window: self, text: "↑", x: 410, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.y = @machine.pen.y-1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
-      @down_y  = Button.new(window: self, text: "↓", x: 440, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true) {@machine.pen.y = @machine.pen.y+1; @machine.pen.update; @connection.request("move #{@machine.pen.x}:#{@machine.pen.y}")}
-      @home    = Button.new(window: self, text: "⌂", x: 470, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.x, @machine.pen.y = @machine.bed.x, @machine.bed.y; @connection.request("home")}
-      @pen_down= Button.new(window: self, text: "∙", x: 500, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = true; @connection.request("pen_down")}
-      @pen_up  = Button.new(window: self, text: "°", x: 520, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = false; @connection.request("pen_up")}
-      @stop    = Button.new(window: self, text: "■", x: 545, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@connection.request("stop")}
+      @connect = Button.new(window: self, text: "Connect to Plotter", x: 100, y: @machine.bed.y+@machine.bed.height+100) do
+        if @connection
+          @connection.reconnect
+        else
+          @connection = Connection.new(host: "localhost", machine: @machine)
+        end
+      end
+      @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}"); @machine.status(:busy, "Moving to #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}")}) {@machine.pen.x = @machine.pen.x-1; @machine.pen.update}
+      @right_x = Button.new(window: self, text: "→", x: 380, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}"); @machine.status(:busy, "Moving to #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}")}) {@machine.pen.x = @machine.pen.x+1; @machine.pen.update}
+      @up_y    = Button.new(window: self, text: "↑", x: 410, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}"); @machine.status(:busy, "Moving to #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}")}) {@machine.pen.y = @machine.pen.y-1; @machine.pen.update}
+      @down_y  = Button.new(window: self, text: "↓", x: 440, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}"); @machine.status(:busy, "Moving to #{@machine.plotter.pen_x}:#{@machine.plotter.pen_y}")}) {@machine.pen.y = @machine.pen.y+1; @machine.pen.update}
+      @home    = Button.new(window: self, text: "⌂", x: 470, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.x, @machine.pen.y = @machine.bed.x, @machine.bed.y; @connection.request("home"); ; @machine.status(:busy, "Moving to 0:0")}
+      @pen_down= Button.new(window: self, text: "∙", x: 500, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = true; @connection.request("pen_down"); @machine.status(:busy, "Lowering pen")}
+      @pen_up  = Button.new(window: self, text: "°", x: 520, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = false; @connection.request("pen_up"); @machine.status(:busy, "Raising pen")}
+      @stop    = Button.new(window: self, text: "■", x: 545, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.status(:busy, "Plotter Stopped!"); @connection.request("stop")}
     end
 
     @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}

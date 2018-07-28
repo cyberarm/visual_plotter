@@ -5,9 +5,11 @@ class Connection
   Message = Struct.new(:message, :requester, :send_to)
   attr_reader :socket, :host, :port, :uuid
 
-  def initialize(host: "192.168.49.1", port: 8962)
+  def initialize(host: "192.168.49.1", port: 8962, machine:)
     @host, @port = host, port
+    @machine = machine
     @connected = false
+    @errored = false
     @uuid = nil
     @queue = []
 
@@ -18,43 +20,67 @@ class Connection
   def connect
     Thread.new do
       begin
-        puts "Connecting"
+        @machine.status(:busy, "Connecting to plotter...")
         @socket = Socket.tcp(host, port, connect_timeout: 5)
         @connected = true
-        puts "Connected"
+        @machine.status(:busy, "Connected to plotter, authenticating...")
         authenticate
-        puts "Authenticated"
+        @machine.status(:okay, "Authenticated to plotter")
+      rescue Errno::ECONNREFUSED => e
+        @errored = true
+        @connected = false
+        @machine.status(:error, "Failed to connect to plotter")
       rescue SocketError => e
-        p e
+        @connected = false
+        @errored = true
+        @machine.status(:error, "SocketError: "+e)
       end
 
       loop do
         break if not connected?
         while(@queue.size > 0)
           process_queue
-          puts "-> 1"
         end
-        sleep 0.01
+        sleep 0.0001
       end
 
       @socket.close if @socket
     end
   end
 
+  def reconnect
+    if !connected? && @errored
+      @errored = false
+      connect
+    else
+      @machine.status(:okay, "Aleady connected to plotter")
+    end
+  end
+
   def process_queue
     message = @queue.shift
     if message
-      write(message.message)
-      data = read
-      if message.send_to
-        message.requester.send(message.send_to, data)
-      else
-        puts data
-      end
+      begin
+        write(message.message)
+        data = read
+        if message.send_to
+          message.requester.send(message.send_to, data)
+        else
+          puts data
+        end
+      rescue IOError => e
+        @connected = false
+        @errored = true
+        @queue.insert(0, message)
 
-      return true
-    else
-      return false
+        reconnect
+      rescue Errno::EPIPE => e
+        @connected = false
+        @errored = true
+        @queue.insert(0, message)
+
+        reconnect
+      end
     end
   end
 

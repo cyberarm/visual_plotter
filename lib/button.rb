@@ -6,7 +6,7 @@ class Button
   end
 
   attr_accessor :enabled, :holdable
-  def initialize(window:, text: "Button", x:, y:, color: Gosu::Color::WHITE, background: Gosu::Color.rgb(50,50,150), enabled: true, holdable: false, &block)
+  def initialize(window:, text: "Button", x:, y:, color: Gosu::Color::WHITE, background: Gosu::Color.rgb(50,50,150), enabled: true, holdable: false, released: nil, &block)
     @window = window
     @text = Text.new(text: text, x: x+PADDING, y:  y, z: 2, color: color, size: 32)
     @x,@y = x+PADDING,y
@@ -14,11 +14,13 @@ class Button
     @hover = Gosu::Color.rgb(@background.red+50, @background.green+50, @background.blue+50)
     @enabled = enabled
     @holdable= holdable
+    @holding = false
 
     @last_triggered = 0
     @trigger_point = 25 #ms
 
     @block = block
+    @released = released
     LIST << self
   end
 
@@ -38,10 +40,16 @@ class Button
   def update
     if @holdable && @enabled && mouse_over? && Gosu.button_down?(Gosu::MsLeft)
       if Gosu.milliseconds-@last_triggered > @trigger_point
+        @holding = true
         @block.call if @block
 
         @last_triggered = Gosu.milliseconds
       end
+    elsif @holdable && @enabled && mouse_over? && !Gosu.button_down?(Gosu::MsLeft)
+      if @holding
+        @released.call if @released
+      end
+      @holding = false
     end
   end
 
@@ -57,7 +65,10 @@ class Button
     case id
     when Gosu::MsLeft
       if @enabled && mouse_over?
-        @block.call if @block
+        if @holdable && Gosu.milliseconds-@last_triggered < @trigger_point
+        else
+          @block.call if @block
+        end
       end
     end
   end

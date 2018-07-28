@@ -14,5 +14,6 @@ require_relative "lib/text"
 require_relative "lib/button"
 require_relative "lib/display"
 require_relative "lib/machine"
+require_relative "lib/connection"
 
 Display.new.show unless defined?(Ocra)

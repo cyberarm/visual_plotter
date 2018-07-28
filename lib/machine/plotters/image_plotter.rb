@@ -17,7 +17,7 @@ class Machine
 
       @machine.status(:busy, "Plotting...")
       color = ChunkyPNG::Color.r(@machine.chunky_image[pen_x, pen_y])
-  
+
       if @invert
         @pen.plot = (color >= @threshold) ? true : false
       else
@@ -26,7 +26,7 @@ class Machine
 
       @pen.update
       # NO PLOTTING OR EVENTS AFTER THIS LINE
-  
+
       if @forward
         if (pen_x)+1 < @machine.chunky_image.width
           @pen.x+=1

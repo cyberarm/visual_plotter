@@ -63,6 +63,7 @@ class Client
 end
 
 @server = TCPServer.new(8962)
+puts "Server listening..."
 loop do
   Client.new(@server.accept)
 end

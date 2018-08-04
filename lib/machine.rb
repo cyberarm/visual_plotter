@@ -13,6 +13,7 @@ require_relative "machine/compiler/solvers/generational"
 
 class Machine
   attr_reader :pen, :bed, :compiler, :plotter, :canvas, :thread_safe_queue
+  attr_reader :ghost_pen
   attr_reader :rcode_events, :rcode_file, :chunky_image
 
   def initialize(window:, width: 14*40, height: 8*40)
@@ -22,6 +23,7 @@ class Machine
 
     @bed = Bed.new(width: width, height: height)
     @pen = Pen.new(machine: self, x: @bed.x, y: @bed.y)
+    @ghost_pen = Pen.new(ghost: true, machine: self, x: @bed.x, y: @bed.y) # Used for network connections to show where plotter should be
     @compiler = Compiler.new(machine: self)
     @pen.plot = false
     new_canvas
@@ -44,8 +46,8 @@ class Machine
   def draw
     @bed.draw
     @canvas.draw
-    draw_rails
     @pen.draw
+    @ghost_pen.draw if ARGV.join.include?("--network")
 
     @status_text.draw
     @x_pos.draw
@@ -58,13 +60,6 @@ class Machine
     # @target_image.draw(0,0,100) if @target_image
     Gosu.draw_rect(@bed.x+@bed.width+@bed_padding, @bed.y, @bed.width, @bed.height, @bed.color)
     @target_image.draw(@bed.x+@bed.width+@bed_padding, @bed.y, 10) if @target_image
-  end
-
-  def draw_rails
-    # X Axis
-    Gosu.draw_rect(@bed.x, @pen.y-1, @bed.width, 3, Gosu::Color.rgba(200, 0, 0, 200), 100)
-    # Y Axis
-    Gosu.draw_rect(@pen.x-1, @bed.y, 3, @bed.height, Gosu::Color.rgba(0, 200, 0, 200), 100)
   end
 
   def update

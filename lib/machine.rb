@@ -1,6 +1,7 @@
 require_relative "machine/pen"
 require_relative "machine/bed"
 require_relative "machine/canvas"
+require_relative "machine/end_stop"
 require_relative "machine/image_processor"
 require_relative "machine/plotter"
 require_relative "machine/plotters/image_plotter"
@@ -24,6 +25,8 @@ class Machine
     @bed = Bed.new(width: width, height: height)
     @pen = Pen.new(machine: self, x: @bed.x, y: @bed.y)
     @ghost_pen = Pen.new(ghost: true, machine: self, x: @bed.x, y: @bed.y) # Used for network connections to show where plotter should be
+    @x_endstop = EndStop.new(machine: self, x: @bed.x+(@bed.width/2), y: @bed.y-15, axis: :x)
+    @y_endstop = EndStop.new(machine: self, x: @bed.x-15, y: @bed.y+(@bed.height/2), axis: :y)
     @compiler = Compiler.new(machine: self)
     @pen.plot = false
     new_canvas
@@ -49,7 +52,11 @@ class Machine
     @bed.draw
     @canvas.draw
     @pen.draw
-    @ghost_pen.draw if ARGV.join.include?("--network")
+    if ARGV.join.include?("--network")
+      @x_endstop.draw
+      @y_endstop.draw
+      @ghost_pen.draw
+    end
 
     @status_text.draw
     @x_pos.draw

@@ -32,6 +32,8 @@ class Machine
     @rcode_events = nil
     @rcode_index  = 0
 
+    @window.width = @bed.x+@bed.width+@bed_padding + @bed.width+@bed_padding
+
     @status_text = Text.new(text: "", x: @bed.x, y: 30, size: 24)
     status(:okay, "Waiting for photo, drag 'n drop one on the window.")
     @x_pos = Text.new(text: "X: ?", x: @bed.x+@bed.width/2, y: @bed.y-30)

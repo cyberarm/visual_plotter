@@ -6,6 +6,7 @@ class Button
   end
 
   attr_accessor :enabled, :holdable
+  attr_reader :text
   def initialize(window:, text: "Button", x:, y:, color: Gosu::Color::WHITE, background: Gosu::Color.rgb(50,50,150), enabled: true, holdable: false, released: nil, &block)
     @window = window
     @text = Text.new(text: text, x: x+PADDING, y:  y, z: 2, color: color, size: 32)

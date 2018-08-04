@@ -34,6 +34,10 @@ class Connection
         @connected = false
         @errored = true
         @machine.status(:error, "SocketError: "+e)
+      rescue Errno::ETIMEDOUT => e
+        @connected = false
+        @errored = true
+        @machine.status(:error, "Connection timed out [Errno::ETIMEDOUT]")
       end
 
       loop do

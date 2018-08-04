@@ -77,7 +77,10 @@ class Display < Gosu::Window
     unless @show_legal
       network_buttons(@connection.connected?) if @connection
       if @connection && @connection.connected?
+        @connect.text.text = "Plotter Connected"
         # @connection.request("status")
+      elsif @connection && !@connection.connected?
+        @connect.text.text = "Connect to Plotter"
       end
       @machine.update
       @plot.enabled = (@machine.chunky_image || @machine.rcode_events) ? true : false

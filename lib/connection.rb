@@ -99,6 +99,36 @@ class Connection
     end
   end
 
+  def estop
+    @queue.clear
+    @queue << Message.new("estop")
+    @machine.status(:error, "Attempting to perform an Emergency Stop...")
+  end
+
+  def print_it
+    events = nil
+    if @machine.rcode_events
+      events = @machine.rcode_events
+    else
+      @machine.compiler.reset
+      Machine::Compiler::Processor.new(compiler: @machine.compiler, canvas: @machine.canvas)
+      events = @machine.compiler.events
+    end
+
+    if events.nil? || events.count == 2 # includes Pen up and Home, always.
+      @machine.status(:error, "No rcode events, have you plotted?")
+    else
+      @machine.status(:busy, "Printing from #{events.count} rcode events...")
+      events.each do |event|
+        if event.x
+          request("#{event.type} #{event.x}:#{event.y}")
+        else
+          request("#{event.type}")
+        end
+      end
+    end
+  end
+
   def connected?
     @connected
   end

@@ -25,7 +25,7 @@ class Machine
         # puts "Write> #{x}x#{y} -> #{color}"
       else
         @machine.status(:error, "Pen target is outside of the canvas boundry, you may have a faulty rcode file.")
-        @machine.plotter_run = false
+        @machine.plotter.run = false
         # puts "OutOfBounds> #{x}x#{y} -> #{color} | Machine plot: #{@machine.plotter_run}"
         return
       end

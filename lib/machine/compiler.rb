@@ -33,7 +33,6 @@ class Machine
     def reset
       @events = []
       @pen_down = false
-      @last_event = Event.new("nil")
     end
 
     def add_event(type:, x: nil, y: nil)

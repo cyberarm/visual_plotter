@@ -29,7 +29,6 @@ class Machine
     end
 
     def draw
-      puts @x, @y, @size, @color
       if @triggered
         Gosu.draw_rect(@x, @y, @size, @size, @triggered_color, 100)
       else

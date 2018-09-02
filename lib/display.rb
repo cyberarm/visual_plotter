@@ -20,7 +20,7 @@ class Display < Gosu::Window
         if @connection
           @connection.reconnect
         else
-          @connection = Connection.new(host: "localhost", machine: @machine)
+          @connection = Connection.new(machine: @machine, host: "localhost")
         end
       end
       @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x}:#{@machine.ghost_pen.bed_y}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x}:#{@machine.ghost_pen.bed_y}"); @machine.canvas.refresh}) {@machine.ghost_pen.x-=1; @machine.pen.update}
@@ -30,7 +30,8 @@ class Display < Gosu::Window
       @home    = Button.new(window: self, text: "⌂", x: 470, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.x, @machine.pen.y = @machine.bed.x, @machine.bed.y; @connection.request("home"); ; @machine.status(:busy, "Moving to 0:0")}
       @pen_down= Button.new(window: self, text: "∙", x: 500, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = true; @connection.request("pen_down"); @machine.status(:busy, "Lowering pen")}
       @pen_up  = Button.new(window: self, text: "°", x: 520, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = false; @connection.request("pen_up"); @machine.status(:busy, "Raising pen")}
-      @stop    = Button.new(window: self, text: "■", x: 545, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.status(:busy, "Plotter Stopped!"); @connection.request("stop")}
+      @stop    = Button.new(window: self, text: "■", x: 545, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@connection.estop}
+      @print   = Button.new(window: self, text: "Print", x: 580, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@connection.print_it}
     end
 
     @legal = Button.new(window: self, text: "Legal", x: @machine.bed.x, y: self.height-50) {@show_legal = !@show_legal}
@@ -38,7 +39,7 @@ class Display < Gosu::Window
   end
 
   def network_buttons(boolean)
-    list = [@left_x, @right_x, @up_y, @down_y, @pen_down, @pen_up, @home, @stop]
+    list = [@left_x, @right_x, @up_y, @down_y, @pen_down, @pen_up, @home, @stop, @print]
     list.each {|b| b.enabled = boolean}
   end
 

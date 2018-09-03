@@ -12,6 +12,9 @@ class Connection
     @errored = false
     @uuid = nil
     @queue = []
+    @max_plotter_x_position = 3900
+    @max_plotter_y_position = 1500
+    @multiplier = 10 # How much to multiply the x/y coordinate for the physical plotter
 
     connect
     return self
@@ -121,7 +124,7 @@ class Connection
       @machine.status(:busy, "Printing from #{events.count} rcode events...")
       events.each do |event|
         if event.x
-          request("#{event.type} #{event.x}:#{event.y}")
+          request("#{event.type} #{normalize_x(event.x)}:#{normalize_y(event.y)}")
         else
           request("#{event.type}")
         end
@@ -149,5 +152,26 @@ class Connection
 
   def read(max_length = 2048)
     return Base64.decode64(@socket.recv(max_length))
+  end
+
+  private
+  def normalize_x(coordinate)
+    ratio = (@machine.bed.width*@multiplier).to_f / @max_plotter_x_position
+    new_x = (coordinate*@multiplier / ratio).round
+    if coordinate < 0 or coordinate > @max_plotter_x_position
+      raise "Coordinate is out of bounds!"
+    end
+
+    return new_x
+  end
+
+  def normalize_y(coordinate)
+    ratio = (@machine.bed.height*@multiplier).to_f / @max_plotter_y_position
+    new_y = (coordinate*@multiplier / ratio).round
+    if coordinate < 0 or coordinate > @max_plotter_y_position
+      raise "Coordinate is out of bounds!"
+    end
+
+    return new_y
   end
 end

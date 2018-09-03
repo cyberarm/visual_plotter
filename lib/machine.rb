@@ -15,7 +15,7 @@ require_relative "machine/compiler/solvers/generational"
 class Machine
   attr_reader :pen, :bed, :compiler, :plotter, :canvas, :thread_safe_queue
   attr_reader :ghost_pen, :x_endstop, :y_endstop
-  attr_reader :rcode_events, :rcode_file, :chunky_image
+  attr_reader :rcode_events, :rcode_file, :chunky_image, :bed_padding
 
   def initialize(window:, width: 14*40, height: 8*40)
     @thread_safe_queue = []
@@ -34,8 +34,6 @@ class Machine
     @bed_padding = 100
     @rcode_events = nil
     @rcode_index  = 0
-
-    @window.width = @bed.x+@bed.width+@bed_padding + @bed.width+@bed_padding
 
     @status_text = Text.new(text: "", x: @bed.x, y: 30, size: 24)
     status(:okay, "Waiting for photo, drag 'n drop one on the window.")

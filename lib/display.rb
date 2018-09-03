@@ -1,6 +1,6 @@
 class Display < Gosu::Window
   def initialize
-    super(Gosu.screen_width/4*3, Gosu.screen_height/4*3, fullscreen: false, update_interval: 50.0, resizable: true)
+    super(1400, Gosu.screen_height/4*3, fullscreen: false, update_interval: 50.0, resizable: true)
 
     self.caption = "VisualPlotter version #{VisualPlotter::VERSION}"
     @show_legal  = false
@@ -8,7 +8,7 @@ class Display < Gosu::Window
     @text    = Text.new(size: 24)
     @escaped = 0
 
-    @machine = Machine.new(window: self)#, width: 6*50, height: 4*50)
+    @machine = Machine.new(window: self)
     @connection = nil
     @plot = Button.new(window: self, text: "Plot", x: 100, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.replot}
     @save = Button.new(window: self, text: "Save Image", x: 180, y: @machine.bed.y+@machine.bed.height+50, enabled: false) {@machine.save}

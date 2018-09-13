@@ -41,9 +41,13 @@ class Connection
         @connected = false
         @errored = true
         @machine.status(:error, "Connection timed out [Errno::ETIMEDOUT]")
+      rescue IOError => e
+        @connected = false
+        @errored = true
+        @machine.status(:error, "Connection error [IOError]")
       end
 
-      loop do
+      while(@connected)
         break if not connected?
         while(@queue.size > 0)
           process_queue

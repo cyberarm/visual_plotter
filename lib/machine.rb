@@ -13,9 +13,9 @@ require_relative "machine/compiler/solvers/graph_search"
 require_relative "machine/compiler/solvers/generational"
 
 class Machine
-  attr_reader :pen, :bed, :compiler, :plotter, :canvas, :thread_safe_queue
-  attr_reader :ghost_pen, :x_endstop, :y_endstop
-  attr_reader :rcode_events, :rcode_file, :chunky_image, :bed_padding
+  attr_reader :pen, :bed, :compiler, :plotter, :canvas, :thread_safe_queue, :x_endstop, :y_endstop
+  attr_reader :ghost_pen
+  attr_reader :rcode_events, :rcode_file, :chunky_image
 
   def initialize(window:, width: 14*40, height: 8*40)
     @thread_safe_queue = []

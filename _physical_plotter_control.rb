@@ -1,8 +1,8 @@
 require "socket"
 require "base64"
 
-socket = TCPSocket.new("192.168.1.6", 8962)
-puts "Connected to socket.peera"
+socket = TCPSocket.new("192.168.49.1", 8962)
+puts "Connected to #{socket.peeraddr}"
 uuid = Base64.strict_decode64(socket.recv(1024).strip)
 puts uuid
 socket.puts(Base64.strict_encode64(uuid))

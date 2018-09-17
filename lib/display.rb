@@ -19,12 +19,12 @@ class Display < Gosu::Window
       at_exit do
         @connection.socket.close if @connection.connected?
       end
-      @pen_multiplier = 11
+      @pen_multiplier = 30
       @connect = Button.new(window: self, text: "Connect to Plotter", x: 100, y: @machine.bed.y+@machine.bed.height+100) do
         if @connection
           @connection.reconnect
         else
-          @connection = Connection.new(host: "192.168.1.6", machine: @machine)
+          @connection = Connection.new(host: "192.168.49.1", machine: @machine)
         end
       end
       @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.x-=1; @machine.pen.update; @machine.ghost_pen.update}

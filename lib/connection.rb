@@ -14,7 +14,7 @@ class Connection
     @queue = []
     @max_plotter_x_position = 3900
     @max_plotter_y_position = 1500
-    @multiplier = 10 # How much to multiply the x/y coordinate for the physical plotter
+    @multiplier = 30 # How much to multiply the x/y coordinate for the physical plotter
 
     connect
     return self
@@ -49,7 +49,7 @@ class Connection
 
       while(@connected)
         break if not connected?
-        while(@queue.size > 0)
+        while(@queue.size > 0 && @connected)
           process_queue
         end
         sleep 0.0001
@@ -126,13 +126,16 @@ class Connection
       @machine.status(:error, "No rcode events, have you plotted?")
     else
       @machine.status(:busy, "Printing from #{events.count} rcode events...")
+      buffer = ""
       events.each do |event|
         if event.x
-          request("#{event.type} #{normalize_x(event.x)}:#{normalize_y(event.y)}")
+          buffer << "#{event.type} #{normalize_x(event.x)}:#{normalize_y(event.y)}\n"
         else
-          request("#{event.type}")
+          buffer << "#{event.type}\n"
         end
       end
+
+      request("download #{buffer}")
     end
   end
 

@@ -19,18 +19,21 @@ class Display < Gosu::Window
       at_exit do
         @connection.socket.close if @connection.connected?
       end
-      @pen_multiplier = 30
       @connect = Button.new(window: self, text: "Connect to Plotter", x: 100, y: @machine.bed.y+@machine.bed.height+100) do
         if @connection
           @connection.reconnect
         else
-          @connection = Connection.new(host: "192.168.49.1", machine: @machine)
+          if ARGV.join.include?("--test-server")
+            @connection = Connection.new(host: "localhost", machine: @machine)
+          else
+            @connection = Connection.new(host: "192.168.49.1", machine: @machine)
+          end
         end
       end
-      @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.x-=1; @machine.pen.update; @machine.ghost_pen.update}
-      @right_x = Button.new(window: self, text: "→", x: 380, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.x+=1; @machine.pen.update; @machine.ghost_pen.update}
-      @up_y    = Button.new(window: self, text: "↑", x: 410, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.y-=1; @machine.pen.update; @machine.ghost_pen.update}
-      @down_y  = Button.new(window: self, text: "↓", x: 440, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@pen_multiplier}:#{@machine.ghost_pen.bed_y*@pen_multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.y+=1; @machine.pen.update; @machine.ghost_pen.update}
+      @left_x  = Button.new(window: self, text: "←", x: 350, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.x-=1; @machine.pen.update; @machine.ghost_pen.update}
+      @right_x = Button.new(window: self, text: "→", x: 380, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.x+=1; @machine.pen.update; @machine.ghost_pen.update}
+      @up_y    = Button.new(window: self, text: "↑", x: 410, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.y-=1; @machine.pen.update; @machine.ghost_pen.update}
+      @down_y  = Button.new(window: self, text: "↓", x: 440, y: @machine.bed.y+@machine.bed.height+100, enabled: false, holdable: true, released: proc{@connection.request("move #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.status(:busy, "Moving to #{@machine.ghost_pen.bed_x*@connection.multiplier}:#{@machine.ghost_pen.bed_y*@connection.multiplier}"); @machine.canvas.refresh}) {@machine.ghost_pen.y+=1; @machine.pen.update; @machine.ghost_pen.update}
       @home    = Button.new(window: self, text: "⌂", x: 470, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.x, @machine.pen.y = @machine.bed.x, @machine.bed.y; @connection.request("home"); ; @machine.status(:busy, "Moving to 0:0")}
       @pen_down= Button.new(window: self, text: "∙", x: 500, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = true; @connection.request("pen_down"); @machine.status(:busy, "Lowering pen")}
       @pen_up  = Button.new(window: self, text: "°", x: 520, y: @machine.bed.y+@machine.bed.height+100, enabled: false) {@machine.pen.plot = false; @connection.request("pen_up"); @machine.status(:busy, "Raising pen")}
@@ -54,12 +57,14 @@ class Display < Gosu::Window
       case s.first.downcase
       when "time"
       when "pen"
-        @machine.pen.plot = true if s.last.to_f > 0
-        @machine.pen.plot = false if s.last.to_f <= 0
+        unless @machine.plotter.run
+          @machine.pen.plot = true if s.last.to_f > 0
+          @machine.pen.plot = false if s.last.to_f <= 0
+        end
       when "x"
-        @machine.pen.x = (s.last.to_i/@pen_multiplier)+@machine.bed.x
+        @machine.pen.x = (s.last.to_i/@connection.multiplier)+@machine.bed.x unless @machine.plotter.run
       when "y"
-        @machine.pen.y = (s.last.to_i/@pen_multiplier)+@machine.bed.y
+        @machine.pen.y = (s.last.to_i/@connection.multiplier)+@machine.bed.y unless @machine.plotter.run
       when "x_endstop"
         @machine.x_endstop.triggered = true if s.last.strip == "true"
         @machine.x_endstop.triggered = false if s.last.strip != "true"

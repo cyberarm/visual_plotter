@@ -3,7 +3,7 @@ require "base64"
 
 class Connection
   Message = Struct.new(:message, :requester, :send_to)
-  attr_reader :socket, :host, :port, :uuid
+  attr_reader :socket, :host, :port, :uuid, :multiplier
 
   def initialize(host: "192.168.49.1", port: 8962, machine:)
     @host, @port = host, port
@@ -12,9 +12,9 @@ class Connection
     @errored = false
     @uuid = nil
     @queue = []
-    @max_plotter_x_position = 3900
-    @max_plotter_y_position = 1500
-    @multiplier = 30 # How much to multiply the x/y coordinate for the physical plotter
+    @max_plotter_x_position = 4200
+    @max_plotter_y_position = 3200
+    @multiplier = 7 # How much to multiply the x/y coordinate for the physical plotter
 
     connect
     return self
@@ -108,7 +108,7 @@ class Connection
 
   def estop
     @queue.clear
-    @queue << Message.new("estop")
+    @queue << Message.new("stop")
     @machine.status(:error, "Attempting to perform an Emergency Stop...")
   end
 
@@ -163,8 +163,9 @@ class Connection
 
   private
   def normalize_x(coordinate)
-    ratio = (@machine.bed.width*@multiplier).to_f / @max_plotter_x_position
-    new_x = (coordinate*@multiplier / ratio).round
+    # ratio = (@machine.bed.width*@multiplier).to_f / @max_plotter_x_position
+    # new_x = (coordinate*@multiplier / ratio).round
+    new_x = (coordinate.to_f*@multiplier).to_i
     if coordinate < 0 or coordinate > @max_plotter_x_position
       raise "Coordinate is out of bounds!"
     end
@@ -173,8 +174,9 @@ class Connection
   end
 
   def normalize_y(coordinate)
-    ratio = (@machine.bed.height*@multiplier).to_f / @max_plotter_y_position
-    new_y = (coordinate*@multiplier / ratio).round
+    # ratio = (@machine.bed.width*@multiplier).to_f / @max_plotter_y_position
+    # new_y = (coordinate*@multiplier / ratio).round
+    new_y = (coordinate.to_f*@multiplier).to_i
     if coordinate < 0 or coordinate > @max_plotter_y_position
       raise "Coordinate is out of bounds!"
     end

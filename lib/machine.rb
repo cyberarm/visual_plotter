@@ -25,8 +25,8 @@ class Machine
     @bed = Bed.new(width: width, height: height)
     @pen = Pen.new(machine: self, x: @bed.x, y: @bed.y)
     @ghost_pen = Pen.new(ghost: true, machine: self, x: @bed.x, y: @bed.y) # Used for network connections to show where plotter should be
-    @x_endstop = EndStop.new(machine: self, x: @bed.x+(@bed.width/2), y: @bed.y-15, axis: :x)
-    @y_endstop = EndStop.new(machine: self, x: @bed.x-15, y: @bed.y+(@bed.height/2), axis: :y)
+    @x_endstop = EndStop.new(machine: self, x: @bed.x-15, y: @bed.y+(@bed.height/2), axis: :x)
+    @y_endstop = EndStop.new(machine: self, x: @bed.x+(@bed.width/2), y: @bed.y-15, axis: :y)
     @compiler = Compiler.new(machine: self)
     @pen.plot = false
     new_canvas

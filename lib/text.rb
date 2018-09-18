@@ -14,16 +14,14 @@ class Text
   end
 
   def cache
-    if CACHE[@font_name].is_a?(Hash)
-      if CACHE[@font_name][@size]
-        @font = CACHE[@font_name][@size]
-      else
-        CACHE[@font_name][@size] = Gosu::Font.new(@size, name: @font_name)
-        @font = CACHE[@font_name][@size]
-      end
-    else
+    unless CACHE[@font_name].is_a?(Hash)
       CACHE[@font_name] = {}
-      CACHE[@font_name][@size] = Gosu::Font.new(@size, name: @font_name)
+    end
+
+    if CACHE[@font_name][@size]
+      @font = CACHE[@font_name][@size]
+    else
+      CACHE[@font_name][@size] = Gosu::Font.new(@size, name: @font_name, bold: true)
       @font = CACHE[@font_name][@size]
     end
   end

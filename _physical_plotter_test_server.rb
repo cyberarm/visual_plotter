@@ -32,6 +32,8 @@ class Client
     return if string.size == 0
     puts "->#{string}"
     case string.split(" ").first
+    when "download"
+      write("Received download")
     when "home"
       write("Moving to 0:0")
     when "move"
@@ -42,7 +44,9 @@ class Client
     when "pen_down"
       write("Lowering pen")
     when "status"
-      write("{\"status\":200, \"data\":{\"xAxis\":100,\"yAxis\":100}}")
+      write("PEN: 1.0\nX: 0\nY: 0\nX_ENDSTOP: true\nY_ENDSTOP: false")
+    when "stop"
+      write("HALTING")
     else
       write("Unknown command")
     end

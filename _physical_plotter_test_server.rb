@@ -25,6 +25,8 @@ class Client
       else
         parse(read)
       end
+
+      sleep 0.1
     end
   end
 
